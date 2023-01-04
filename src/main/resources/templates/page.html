@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>GHMM Tool</title>
+    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.3/css/bootstrap.min.css} "/>
+    <link href="../static/css/style.css" rel="stylesheet">
+    <script th:src="@{/webjars/jquery/3.6.1/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/5.2.3/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"> </div>
+<main class="container mt-4">
+    <section layout:fragment="content" >
+        <p>Page content goes here</p>
+    </section>
+</main>
+<div th:replace="~{fragments/footer :: footer}"> </div>
+</body>
+</html>
