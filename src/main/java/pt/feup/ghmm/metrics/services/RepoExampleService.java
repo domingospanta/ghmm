@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,5 +46,14 @@ public class RepoExampleService {
             }
         }
         return repoResults;
+    }
+
+
+    public Page<RepoExample> findAll(Pageable paging) {
+        return repository.findAll(paging);
+    }
+
+    public Page<RepoExample> findByUrlContainingIgnoreCase(String keyword, Pageable paging) {
+        return repository.findByUrlContainingIgnoreCase(keyword, paging);
     }
 }
