@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class RepoResult {
     String repo;
     String message;
+    boolean error;
 }

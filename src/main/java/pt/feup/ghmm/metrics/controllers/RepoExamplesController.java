@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoExampleUploadDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.RepoExample;
@@ -22,14 +23,9 @@ import java.util.List;
 @AllArgsConstructor
 @Controller
 @RequestMapping("/repo/examples")
-public class ExampleController {
+public class RepoExamplesController {
 
     private RepoExampleService repoExampleService;
-
-    @GetMapping("/page")
-    public String getRepoExamplesPage(){
-        return "repolist";
-    }
 
     @GetMapping("/all")
     public String getAll(Model model,
@@ -62,6 +58,23 @@ public class ExampleController {
         return "repolist";
     }
 
+    @GetMapping("/upload")
+    public String getRepoExamplesPage(Model model){
+        model.addAttribute("example", new RepoExampleDto());
+        return "repoupload";
+    }
+
+    @PostMapping("/add")
+    public String addRepoExample(@ModelAttribute RepoExampleDto example, Model model) {
+        RepoResult repoResult = repoExampleService.save(example);
+        model.addAttribute("result", repoResult);
+        if(repoResult.isError()){
+            model.addAttribute("example", example);
+        } else {
+            model.addAttribute("example", new RepoExampleDto());
+        }
+        return "repoupload";
+    }
 
 
     @PostMapping("/upload")

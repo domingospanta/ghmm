@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.multipart.MultipartFile;
 import pt.feup.ghmm.core.utils.CSVHelper;
+import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
@@ -32,22 +33,10 @@ public class RepoExampleService {
     private List<RepoResult> saveAll(List<RepoExample> repoExamples) {
         List<RepoResult> repoResults = new ArrayList<>();
         for(RepoExample example: repoExamples){
-            try {
-                repository.save(example);
-                repoResults.add(RepoResult.builder()
-                                .repo(example.getUrl())
-                                .message("Saved successfully")
-                        .build());
-            } catch (TransactionSystemException exception){
-                repoResults.add(RepoResult.builder()
-                        .repo(example.getUrl())
-                        .message(exception.getMessage())
-                        .build());
-            }
+            repoResults.add(save(example));
         }
         return repoResults;
     }
-
 
     public Page<RepoExample> findAll(Pageable paging) {
         return repository.findAll(paging);
@@ -55,5 +44,35 @@ public class RepoExampleService {
 
     public Page<RepoExample> findByUrlContainingIgnoreCase(String keyword, Pageable paging) {
         return repository.findByUrlContainingIgnoreCase(keyword, paging);
+    }
+
+    public RepoResult save(RepoExampleDto repoExampleDto) {
+            RepoExample repoExample = RepoExample
+                    .builder()
+                    .owner(repoExampleDto.getOwner())
+                    .name(repoExampleDto.getName())
+                    .url(repoExampleDto.getUrl())
+                    .microservice(repoExampleDto.isMicroservice())
+                    .build();
+            return save(repoExample);
+    }
+
+    private RepoResult save(RepoExample repoExample) {
+        try{
+            repository.save(repoExample);
+        }catch (TransactionSystemException exception){
+            return RepoResult.builder()
+                    .error(true)
+                    .repo(repoExample.getUrl())
+                    .message(exception.getMessage())
+                    .build();
+        }
+
+        return RepoResult.builder()
+                .error(false)
+                .repo(repoExample.getUrl())
+                .message("Saved successfully")
+                .build();
+
     }
 }

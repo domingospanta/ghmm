@@ -4,7 +4,6 @@
     <title>Listing</title>
 </head>
 <body>
-
 <div layout:fragment="content">
     <div class="pagetitle">
         <h1>List of Repositories Examples</h1>
@@ -12,90 +11,83 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.html">Home</a></li>
                 <li class="breadcrumb-item">Repo Examples</li>
-                <li class="breadcrumb-item active">List</li>
+                <li class="breadcrumb-item active">Add/Upload</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
 
     <div class="card">
         <div class="card-body">
-            <div th:replace="~{fragments/searchRepos :: searchRepos}"> </div>
+            <h5 class="card-title">Add one repository example</h5>
 
-            <!-- Table with stripped rows -->
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th scope="col">Id</th>
-                    <th scope="col">Owner</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">URL</th>
-                    <th scope="col">Microservice?</th>
-                </tr>
-                </thead>
-                <tbody>
-
-                <tr th:each="example : ${repoExamples}">
-                    <th scope="row">[[${example.id}]]</th>
-                    <td>[[${example.owner}]]</td>
-                    <td>[[${example.name}]]</td>
-                    <td>[[${example.url}]]</td>
-                    <td>[[${example.microservice}]]</td>
-                </tr>
-                </tbody>
-            </table>
-            <!-- End Table with stripped rows -->
-
-
-            <nav aria-label="Pagination" th:if="${totalPages > 0}">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging(1, '<<', 'First Page')"></a>
-                    </li>
-                    <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging(${currentPage - 1}, 'Prev', 'Previous Page')"></a>
-                    </li>
-                    <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
-                        <a class="page-link" href="#">...</a>
-                    </li>
-                    <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
-                        th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
-                        <a th:replace="fragments/paging :: paging(${page}, ${page}, 'Page ' + ${page})"></a>
-                    </li>
-                    <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
-                        <a class="page-link" href="#">...</a>
-                    </li>
-                    <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging(${currentPage + 1},'Next', 'Next Page')"></a>
-                    </li>
-                    <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging(${totalPages}, '>>', 'Last Page')"></a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-        <!--
-        <div class="modal fade text-center" id="confirmModal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Delete Confirmation</h5>
-                        <button type="button" class="close" data-dismiss="modal">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+            <!-- General Form Elements -->
+            <form action="#" th:action="@{/repo/examples/add}" th:object="${example}" method="post">
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Owner</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" th:field="*{owner}">
                     </div>
-
-                    <div class="modal-body">
-                        <span id="confirmText"></span>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Name</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" th:field="*{name}">
                     </div>
-
-                    <div class="modal-footer">
-                        <a type="button" id="yesBtn" class="btn btn-danger">Yes</a>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Url</label>
+                    <div class="col-sm-10">
+                        <input type="url" class="form-control" th:field="*{url}">
                     </div>
+                </div>
+                <div class="row mb-3">
+                    <legend class="col-form-label col-sm-2 pt-0">Microservice</legend>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="gridCheck2" checked th:field="*{microservice}">
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Submit Button</label>
+                    <div class="col-sm-10">
+                        <button type="submit" class="btn btn-primary">Submit Form</button>
+                    </div>
+                </div>
+            </form><!-- End General Form Elements -->
+            <div th:if="${result != null}">
+
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${result.error} == true">
+                    <p th:text="${result.message}" />
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${result.error} == false">
+                    <p th:text="${result.message}" />
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             </div>
         </div>
-        -->
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Add a list of examples from a CSV file</h5>
+            <!-- General Form Elements -->
+            <form>
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">File Upload</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" type="file" id="formFile">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Submit Button</label>
+                    <div class="col-sm-10">
+                        <button type="submit" class="btn btn-primary">Submit Form</button>
+                    </div>
+                </div>
+            </form><!-- End General Form Elements -->
         </div>
     </div>
 </div>
