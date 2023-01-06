@@ -7,6 +7,6 @@ import pt.feup.ghmm.metrics.models.RepoExample;
 import java.util.List;
 
 @SuperBuilder
-public class RepoExampleListDto extends ResponseMessage {
+public class RepoExampleDto extends ResponseMessage {
     List<RepoExample> examples;
 }
