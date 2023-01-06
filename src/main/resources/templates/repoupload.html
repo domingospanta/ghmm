@@ -49,23 +49,14 @@
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Submit Button</label>
+                    <label class="col-sm-2 col-form-label"></label>
                     <div class="col-sm-10">
-                        <button type="submit" class="btn btn-primary">Submit Form</button>
+                        <button type="submit" class="btn btn-primary">Add</button>
                     </div>
                 </div>
             </form><!-- End General Form Elements -->
             <div th:if="${result != null}">
-
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${result.error} == true">
-                    <p th:text="${result.message}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-
-                <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${result.error} == false">
-                    <p th:text="${result.message}" />
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+                <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
             </div>
         </div>
     </div>
@@ -74,20 +65,58 @@
         <div class="card-body">
             <h5 class="card-title">Add a list of examples from a CSV file</h5>
             <!-- General Form Elements -->
-            <form>
+            <form th:action="@{/repo/examples/upload}" enctype="multipart/form-data" method="post">
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">File Upload</label>
                     <div class="col-sm-10">
-                        <input class="form-control" type="file" id="formFile">
+                        <input class="form-control" type="file" id="formFile" name="file">
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Submit Button</label>
+                    <label class="col-sm-2 col-form-label"></label>
                     <div class="col-sm-10">
-                        <button type="submit" class="btn btn-primary">Submit Form</button>
+                        <button type="submit" class="btn btn-primary">Upload</button>
                     </div>
                 </div>
             </form><!-- End General Form Elements -->
+            <div th:if="${uploadResult != null}">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${uploadResult.error} == true">
+                    <p th:text="${uploadResult.message}"></p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${uploadResult.error} == false">
+                    <p th:text="${uploadResult.message}"></p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+                    <!-- Modal Dialog Scrollable -->
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalDialogScrollable">
+                        Upload Details
+                    </button>
+                </div>
+
+                <div class="modal fade" id="modalDialogScrollable" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"> <p th:text="${uploadResult.message}"></p> </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div th:each="result: ${uploadResult.resultMap}">
+                                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- End Modal Dialog Scrollable-->
+
+            </div>
+
+
         </div>
     </div>
 </div>

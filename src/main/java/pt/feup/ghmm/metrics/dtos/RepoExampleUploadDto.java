@@ -14,6 +14,8 @@ import java.util.List;
 @SuperBuilder
 public class RepoExampleUploadDto extends ResponseMessage {
     List<RepoResult> resultMap;
+    boolean error;
+    String message;
 }
 
 

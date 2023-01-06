@@ -1,0 +1,11 @@
+<div th:fragment="uploadResult(result)">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${result.error} == true">
+        <p th:text="${result.repo} + ': ' + ${result.message}"></p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${result.error} == false">
+        <p th:text="${result.repo} + ': ' + ${result.message}"></p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>

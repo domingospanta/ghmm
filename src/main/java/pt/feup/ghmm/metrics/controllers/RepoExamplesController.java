@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +15,6 @@ import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.services.RepoExampleService;
 import pt.feup.ghmm.core.utils.CSVHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -26,6 +23,9 @@ import java.util.List;
 public class RepoExamplesController {
 
     private RepoExampleService repoExampleService;
+
+    private final String LIST_PAGE = "repolist";
+    private final String UPLOAD_PAGE = "repoupload";
 
     @GetMapping("/all")
     public String getAll(Model model,
@@ -55,13 +55,12 @@ public class RepoExamplesController {
             model.addAttribute("message", e.getMessage());
         }
 
-        return "repolist";
+        return LIST_PAGE;
     }
 
     @GetMapping("/upload")
     public String getRepoExamplesPage(Model model){
-        model.addAttribute("example", new RepoExampleDto());
-        return "repoupload";
+        return prepareDataForUploadPage(model);
     }
 
     @PostMapping("/add")
@@ -73,30 +72,38 @@ public class RepoExamplesController {
         } else {
             model.addAttribute("example", new RepoExampleDto());
         }
-        return "repoupload";
+        return UPLOAD_PAGE;
     }
 
 
     @PostMapping("/upload")
-    public @ResponseBody ResponseEntity<RepoExampleUploadDto> uploadFile(@RequestParam("file") MultipartFile file) {
-        String message = "";
-
+    public String uploadFile(@RequestParam("file") MultipartFile file, Model model) {
+        String message;
+        boolean error = true;
+        List<RepoResult> repoResults = null;
         if (CSVHelper.hasCSVFormat(file)) {
             try {
-                List<RepoResult> repoResults = repoExampleService.save(file);
-
-                message = "Uploaded the file successfully: " + file.getOriginalFilename();
-                return ResponseEntity.status(HttpStatus.OK).body(
-                        RepoExampleUploadDto.builder()
-                                .resultMap(repoResults)
-                                .message(message).build());
+                repoResults = repoExampleService.save(file);
+                model.addAttribute("results", repoResults);
+                message = "File uploaded successfully: " + file.getOriginalFilename();
+                error = false;
             } catch (Exception e) {
                 message = "Could not upload the file: " + file.getOriginalFilename() + "!";
-                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(RepoExampleUploadDto.builder().message(message).build());
             }
+        } else {
+            message = "Please select a csv file!";
         }
+        RepoExampleUploadDto uploadResult =
+                RepoExampleUploadDto.builder()
+                        .resultMap(repoResults)
+                        .error(error)
+                        .message(message).build();
+        model.addAttribute("uploadResult", uploadResult);
+        return prepareDataForUploadPage(model);
+    }
 
-        message = "Please upload a csv file!";
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(RepoExampleUploadDto.builder().message(message).build());
+    private String prepareDataForUploadPage(Model model) {
+        model.addAttribute("example", new RepoExampleDto());
+        return UPLOAD_PAGE;
     }
 }
