@@ -5,8 +5,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +16,6 @@ import pt.feup.ghmm.metrics.models.RepoExample;
 
 public class CSVHelper {
     public static String TYPE = "text/csv";
-    static String[] HEADERs = { "Id", "Title", "Description", "Published" };
 
     public static boolean hasCSVFormat(MultipartFile file) {
 
@@ -53,6 +50,5 @@ public class CSVHelper {
             throw new RuntimeException("fail to parse CSV file: " + e.getMessage());
         }
     }
-
 }
 

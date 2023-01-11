@@ -42,6 +42,10 @@ public class RepoExampleService {
         return repository.findAll(paging);
     }
 
+    public Iterable<RepoExample> findAll() {
+        return repository.findAll();
+    }
+
     public Page<RepoExample> findByUrlContainingIgnoreCase(String keyword, Pageable paging) {
         return repository.findByUrlContainingIgnoreCase(keyword, paging);
     }
