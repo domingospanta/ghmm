@@ -12,7 +12,7 @@ import pt.feup.ghmm.core.dtos.ContentDto;
 import pt.feup.ghmm.core.dtos.MainRepositoryDto;
 import pt.feup.ghmm.core.dtos.SearchResultDto;
 
-import java.util.Map;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureWebClient
@@ -36,7 +36,7 @@ class GitHubApiServiceTest {
 
     @Test
     void getLanguagesData() {
-        Map map = gitHubApiService.getLanguagesData("zammad", "zammad");
+        HashMap<String, Integer> map = gitHubApiService.getLanguagesData("zammad", "zammad");
         assertNotNull(map);
     }
 

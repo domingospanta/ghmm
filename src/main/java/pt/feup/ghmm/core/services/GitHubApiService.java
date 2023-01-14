@@ -34,7 +34,7 @@ public class GitHubApiService {
     return restTemplate.getForObject(url, MainRepositoryDto.class);
   }
 
-  public HashMap getLanguagesData(String owner, String repository){
+  public HashMap<String, Integer> getLanguagesData(String owner, String repository){
     if(StringUtils.isEmpty(owner) || StringUtils.isEmpty(repository)) return null;
     String url = END_POINT + "repos/" + owner + "/" + repository + "/languages";
     return restTemplate.getForObject(url, HashMap.class);
@@ -52,10 +52,9 @@ public class GitHubApiService {
     return restTemplate.getForObject(url, AllContentDto.class);
   }
 
-  public SearchResultDto searchRepository(String owner, String repository, String keyword){
-    if(StringUtils.isEmpty(owner) || StringUtils.isEmpty(repository) || StringUtils.isEmpty(keyword)) return null;
-    String url = END_POINT + "search/code?q="+ keyword + "+repo:"+ owner + "/" + repository;
+  public SearchResultDto searchRepository(String owner, String repository, String queryFragment){
+    if(StringUtils.isEmpty(owner) || StringUtils.isEmpty(repository) || StringUtils.isEmpty(queryFragment)) return null;
+    String url = END_POINT + "search/code?q="+ queryFragment + "+repo:"+ owner + "/" + repository;
     return restTemplate.getForObject(url, SearchResultDto.class);
   }
-
 }

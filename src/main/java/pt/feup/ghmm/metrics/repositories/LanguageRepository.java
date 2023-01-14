@@ -6,4 +6,5 @@ import pt.feup.ghmm.metrics.models.Language;
 
 @Repository
 public interface LanguageRepository extends CrudRepository<Language, Long> {
+    Language findByName(String name);
 }

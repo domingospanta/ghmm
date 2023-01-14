@@ -19,8 +19,10 @@ public class RepoExample {
     @GeneratedValue
     private Long id;
 
+    @NotBlank(message = "Url is mandatory")
     private String owner;
 
+    @NotBlank(message = "Url is mandatory")
     private String name;
 
     @NotBlank(message = "Url is mandatory")

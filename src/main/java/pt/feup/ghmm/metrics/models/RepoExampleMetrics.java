@@ -35,6 +35,9 @@ public class RepoExampleMetrics {
     private Set<Language> languages;
 
     @NotNull(message = "Number of files in the main language is mandatory")
+    private String defaultBranch;
+
+    @NotNull(message = "Number of files in the main language is mandatory")
     private long files;
 
     @NotNull(message = "Number of all contents (files + folders) is mandatory")
