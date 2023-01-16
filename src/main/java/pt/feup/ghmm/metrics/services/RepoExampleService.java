@@ -61,7 +61,7 @@ public class RepoExampleService {
             return save(repoExample);
     }
 
-    private RepoResult save(RepoExample repoExample) {
+    public RepoResult save(RepoExample repoExample) {
         try{
             repository.save(repoExample);
         }catch (TransactionSystemException exception){

@@ -22,16 +22,20 @@ public class RepoExampleMetricsService {
 
     private LanguageService languageService;
 
-    private RepoExampleService repoExampleService;
-
     private GitHubApiService gitHubApiService;
+
+    private RepoExampleService repoExampleService;
 
     public List<RepoExampleMetrics> generateMetrics(List<RepoExample> repoExamples){
         if(CollectionUtils.isEmpty(repoExamples)) return new ArrayList<>();
         List<RepoExampleMetrics> metrics = new ArrayList<>();
         repoExamples.forEach(repoExample -> {
             RepoExampleMetrics repoMetrics = fetchMetrics(repoExample);
-            metrics.add(repoMetrics);
+            if(repoMetrics != null){
+                metrics.add(repoMetrics);
+                repoExample.setProcessed(true);
+                repoExampleService.save(repoExample);
+            }
         });
         return metrics;
     }
@@ -47,11 +51,12 @@ public class RepoExampleMetricsService {
 
     private RepoExampleMetrics fetchMetrics(RepoExample repoExample) {
         MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
+        if(mainRepositoryDto == null) return null;
         return RepoExampleMetrics.builder()
                 .repoExample(repoExample)
                 .size(mainRepositoryDto.getSize())
                 .defaultBranch(mainRepositoryDto.getDefaultBranch())
-                .defaultLang(getLanguage(mainRepositoryDto.getLanguage()))
+                .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
                 .languages(getLanguages(repoExample))
                 .files(getFilesCount(repoExample))
                 .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
@@ -73,13 +78,13 @@ public class RepoExampleMetricsService {
     private Set<Language> getLanguageListFromMap(HashMap<String, Integer> map) {
         Set<Language> languages = new HashSet<>();
         for(String language: map.keySet()){
-            languages.add(languageService.findByName(language));
+            languages.add(languageService.findOrCreateByName(language));
         }
         return languages;
     }
 
-    private Language getLanguage(String lang) {
-        return languageService.findByName(lang);
+    private Language getOrCreateLanguage(String lang) {
+        return languageService.findOrCreateByName(lang);
     }
 
     private long getFilesCount(RepoExample repoExample) {

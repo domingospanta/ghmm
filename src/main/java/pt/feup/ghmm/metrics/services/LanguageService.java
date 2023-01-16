@@ -23,7 +23,7 @@ import java.util.List;
 public class LanguageService {
     private LanguageRepository repository;
 
-    public Language findByName(String name) {
+    public Language findOrCreateByName(String name) {
         Language language = repository.findByName(name);
         if(language != null) return language;
 
