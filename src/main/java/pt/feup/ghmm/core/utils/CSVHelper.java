@@ -40,22 +40,24 @@ public class CSVHelper {
             for (CSVRecord csvRecord : csvRecords) {
                 RepoExample repoExample = RepoExample.builder()
                         .owner(csvRecord.get("owner"))
-                        .name(csvRecord.get("name"))
+                        .appName(csvRecord.get("name"))
                         .url(csvRecord.get("url"))
                         .microservice(Boolean.parseBoolean(csvRecord.get("microservice")))
                         .build();
                 boolean isUrlValid = isUrlValid(repoExample.getUrl());
                 if(isUrlValid){
+                    repoExample.setName(getRepositoryNameFromUrl(repoExample.getUrl()));
                     if(StringUtils.isEmpty(repoExample.getOwner())){
                         repoExample.setOwner(getOwnerFromUrl(repoExample.getUrl()));
                     }
-                    if(StringUtils.isEmpty(repoExample.getName())){
-                        repoExample.setOwner(getNameFromUrl(repoExample.getUrl()));
+                    if(StringUtils.isEmpty(repoExample.getAppName())){
+                        repoExample.setAppName(getRepositoryNameFromUrl(repoExample.getUrl()));
                     }
-                } else{
+                } else {
                     repoExample.setUrl(repoExample.getUrl() + " invalid URL!");
                     repoExample.setOwner(null);
                     repoExample.setName(null);
+                    repoExample.setAppName(null);
                 }
                 repos.add(repoExample);
             }
@@ -75,7 +77,7 @@ public class CSVHelper {
         return urlArray[3];
     }
 
-    public static String getNameFromUrl(String url) {
+    public static String getRepositoryNameFromUrl(String url) {
         if (StringUtils.isEmpty(url)) return Strings.EMPTY;
         String[] urlArray = url.split("/");
         return urlArray[4];

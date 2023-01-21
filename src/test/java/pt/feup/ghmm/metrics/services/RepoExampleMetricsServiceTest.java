@@ -9,12 +9,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pt.feup.ghmm.core.services.GitHubApiService;
+import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureWebClient
@@ -39,12 +41,12 @@ class RepoExampleMetricsServiceTest {
     private RepoExampleMetricsService repoExampleMetricsService;
 
     @Test
-    void generateMetrics() {
-        List<RepoExampleMetrics> repoExampleMetrics = repoExampleMetricsService.generateMetrics(null);
+    void generateMetrics() throws ExecutionException, InterruptedException {
+        List<RepoExampleMetrics> repoExampleMetrics = repoExampleMetricsService.generateMetrics(null, null).get();
         assertEquals(repoExampleMetrics.size(), 0);
 
         List<RepoExample> repoExamples = new ArrayList<>();
-        repoExampleMetrics = repoExampleMetricsService.generateMetrics(repoExamples);
+        repoExampleMetrics = repoExampleMetricsService.generateMetrics(ProcessExecution.builder().build(), repoExamples).get();
         assertEquals(repoExampleMetrics.size(), 0);
 
         RepoExample repoExample = RepoExample.builder()
@@ -54,7 +56,10 @@ class RepoExampleMetricsServiceTest {
                 .build();
         repoExamples.add(repoExample);
 
-        repoExampleMetrics = repoExampleMetricsService.generateMetrics(repoExamples);
+        repoExampleMetrics = repoExampleMetricsService.generateMetrics(ProcessExecution.builder()
+                .running(true)
+                .processType("Metrics")
+                .build(), repoExamples).get();
         assertEquals(repoExampleMetrics.size(), 1);
 
         RepoExampleMetrics metrics = repoExampleMetrics.get(0);

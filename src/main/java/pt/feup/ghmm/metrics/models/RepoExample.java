@@ -22,8 +22,11 @@ public class RepoExample {
     @NotBlank(message = "Url is mandatory")
     private String owner;
 
-    @NotBlank(message = "Url is mandatory")
+    @NotBlank(message = "Name is mandatory")
     private String name;
+
+    @NotBlank(message = "App is mandatory")
+    private String appName;
 
     @NotBlank(message = "Url is mandatory")
     @Column(unique = true)

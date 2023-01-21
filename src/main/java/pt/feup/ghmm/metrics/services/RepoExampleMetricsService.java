@@ -1,24 +1,38 @@
 package pt.feup.ghmm.metrics.services;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import pt.feup.ghmm.core.dtos.AllContentDto;
 import pt.feup.ghmm.core.dtos.ContentDto;
 import pt.feup.ghmm.core.dtos.MainRepositoryDto;
 import pt.feup.ghmm.core.dtos.SearchResultDto;
 import pt.feup.ghmm.core.services.GitHubApiService;
 import pt.feup.ghmm.metrics.models.Language;
+import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
+import pt.feup.ghmm.metrics.repositories.ProcessExecutionRepository;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 @Service
 public class RepoExampleMetricsService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RepoExampleMetricsService.class);
+
     private RepoExampleMetricsRepository repository;
+
+    private ProcessExecutionRepository processExecutionRepository;
 
     private LanguageService languageService;
 
@@ -26,48 +40,96 @@ public class RepoExampleMetricsService {
 
     private RepoExampleService repoExampleService;
 
-    public List<RepoExampleMetrics> generateMetrics(List<RepoExample> repoExamples){
-        if(CollectionUtils.isEmpty(repoExamples)) return new ArrayList<>();
-        List<RepoExampleMetrics> metrics = new ArrayList<>();
-        repoExamples.forEach(repoExample -> {
-            RepoExampleMetrics repoMetrics = fetchMetrics(repoExample);
-            if(repoMetrics != null){
-                metrics.add(repoMetrics);
-                repoExample.setProcessed(true);
-                repoExampleService.save(repoExample);
-            }
-        });
-        return metrics;
+    public Page<RepoExampleMetrics> findAll(Pageable paging) {
+        return repository.findAll(paging);
     }
 
-    public boolean saveAll(List<RepoExampleMetrics> metrics){
-        try {
-            repository.saveAll(metrics);
-        }catch (Exception exception){
-            return false;
+    @Async
+    public CompletableFuture<List<RepoExampleMetrics>> generateMetrics(ProcessExecution processExecution, List<RepoExample> repoExamples){
+        if(CollectionUtils.isEmpty(repoExamples)){
+            saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted: nothing to process.", false, false);
+            return CompletableFuture.completedFuture(new ArrayList<>());
         }
-        return true;
+        saveProcessExecution(processExecution, repoExamples.size(), 0, "Starting execution.", true, false);
+        List<RepoExampleMetrics> metrics = new ArrayList<>();
+        try {
+            for(int i = 0; i < repoExamples.size(); i++){
+                RepoExample repoExample = repoExamples.get(i);
+                RepoExampleMetrics repoMetrics = fetchMetrics(repoExample);
+                saveStatusRepoExampleMetrics(repoMetrics, metrics, repoExample);
+                saveProcessExecution(processExecution, repoExamples.size(), i+1, "Progressing execution.", true, false);
+            }
+            saveProcessExecution(processExecution, repoExamples.size(), 0, "Finished execution successfully.", false, false);
+        } catch (HttpClientErrorException.Forbidden exception){
+            saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted due to Git Rest API client error.", false, true);
+        }
+        return CompletableFuture.completedFuture(metrics);
     }
 
-    private RepoExampleMetrics fetchMetrics(RepoExample repoExample) {
-        MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
-        if(mainRepositoryDto == null) return null;
-        return RepoExampleMetrics.builder()
-                .repoExample(repoExample)
-                .size(mainRepositoryDto.getSize())
-                .defaultBranch(mainRepositoryDto.getDefaultBranch())
-                .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
-                .languages(getLanguages(repoExample))
-                .files(getFilesCount(repoExample))
-                .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
-                .microserviceMention(hasMicroserviceMention(repoExample))
-                .databaseConnection(hasDatabaseConnection(repoExample))
-                .dockerfile(hasDockerfile(repoExample))
-                .restful(hasRestful(repoExample, mainRepositoryDto.getLanguage()))
-                .soap(hasSoap(repoExample, mainRepositoryDto.getLanguage()))
-                .messaging(hasMessaging(repoExample))
-                .logsService(hasLogsService(repoExample))
+    private void saveStatusRepoExampleMetrics(RepoExampleMetrics repoMetrics, List<RepoExampleMetrics> metrics, RepoExample repoExample) {
+        try {
+            if (repoMetrics != null) {
+                metrics.add(repoMetrics);
+                repository.save(repoMetrics);
+                repoExample.setProcessed(true);
+            } else {
+                repoExample.setProcessed(false);
+            }
+            repoExampleService.save(repoExample);
+        } catch (Exception exception) {
+            logger.error("Error saving metrics por repo: " + repoExample.getUrl(), exception);
+        }
+    }
+
+    private ProcessExecution saveProcessExecution(ProcessExecution processExecution, int totalItems, int processedItems, String message, boolean running, boolean error) {
+        logger.info("Processed " +  processedItems + " of " + totalItems);
+        processExecution.setTotalItems(totalItems);
+        processExecution.setProcessedItems(processedItems);
+        processExecution.setMessage(message);
+        processExecution.setFinished(!running);
+        processExecution.setRunning(running);
+        processExecution.setError(error);
+        processExecutionRepository.save(processExecution);
+        return processExecution;
+    }
+
+    public ProcessExecution createProcessExecution() {
+        ProcessExecution processExecution = ProcessExecution.builder()
+                .running(true)
+                .processType("Metrics")
                 .build();
+        processExecutionRepository.save(processExecution);
+        return processExecution;
+    }
+
+    private RepoExampleMetrics fetchMetrics(RepoExample repoExample) throws HttpClientErrorException.Forbidden{
+        try {
+            MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
+            if(mainRepositoryDto == null) return null;
+
+            return RepoExampleMetrics.builder()
+                    .repoExample(repoExample)
+                    .size(mainRepositoryDto.getSize())
+                    .defaultBranch(mainRepositoryDto.getDefaultBranch())
+                    .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
+                    .languages(getLanguages(repoExample))
+                    .files(getFilesCount(repoExample))
+                    .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
+                    .microserviceMention(hasMicroserviceMention(repoExample))
+                    .databaseConnection(hasDatabaseConnection(repoExample))
+                    .dockerfile(hasDockerfile(repoExample))
+                    .restful(hasRestful(repoExample, mainRepositoryDto.getLanguage()))
+                    .soap(hasSoap(repoExample, mainRepositoryDto.getLanguage()))
+                    .messaging(hasMessaging(repoExample))
+                    .logsService(hasLogsService(repoExample))
+                    .build();
+        } catch (HttpClientErrorException.Forbidden exception){
+            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
+            throw exception;
+        } catch (Exception exception){
+            logger.error("Error processing repo: " + repoExample.getUrl());
+        }
+        return null;
     }
 
     private Set<Language> getLanguages(RepoExample repoExample) {
@@ -155,7 +217,7 @@ public class RepoExampleMetricsService {
     }
 
     private boolean hasLogsService(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("logstash", "Datadog" + "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Splunk", "Fluentd", "Logtail");
+        List<String> queryFragments = Arrays.asList("logstash", "Datadog", "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Splunk", "Fluentd", "Logtail");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
@@ -163,5 +225,10 @@ public class RepoExampleMetricsService {
             }
         }
         return false;
+    }
+
+    public ProcessExecution getProcessExecutionById(Long id) {
+        Optional<ProcessExecution> processExecution = processExecutionRepository.findById(id);
+        return processExecution.orElse(null);
     }
 }

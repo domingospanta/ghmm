@@ -1,5 +1,5 @@
-<a th:fragment="paging(pageNum, label, tooltip)" class="page-link"
-   th:href="@{'/repo/examples/all?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} + 'page=' + ${pageNum} + '&size=' + ${pageSize}}"
+<a th:fragment="paging(action, pageNum, label, tooltip)" class="page-link"
+   th:href="@{${action} + '?' + ${keyword!=null && keyword!=''? 'keyword=' + keyword + '&' : ''} + 'page=' + ${pageNum} + '&size=' + ${pageSize}}"
    th:title="${tooltip}" rel="tooltip">
     [[${label}]]
 </a>

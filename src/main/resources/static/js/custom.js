@@ -2,7 +2,7 @@ $(document).ready(function () {
   $("#btnClear").on("click", function (e) {
     e.preventDefault();
     $("#keyword").text("");
-    window.location = "/repo/examples/all";
+    window.location = $("#btnClear").data("url");
   });
 
   $().alert('close');
@@ -63,4 +63,52 @@ const on = (type, el, listener, all = false) => {
 
 function changePageSize() {
   $("#searchForm").submit();
+}
+
+function startMetricsGeneration() {
+  $("#startGeneration").hide();
+  $("#processingGeneration").show();
+
+  metricsGenerationRequest();
+}
+var timer;
+function metricsGenerationRequest() {
+  $.ajax({
+    url: "/metrics/generation/start",
+    success:
+        function (data) {
+         console.log("data: " + data);
+        },
+    complete: function () {
+      // Schedule the next request when the current one's complete
+      timer = setInterval(metricsStatusRequest, 5000); // The interval set to 5 seconds
+    }
+  });
+}
+
+function metricsStatusRequest() {
+  $.ajax({
+    url: "/metrics/generation/status",
+    success:
+        function (processExecution) {
+          console.log("status data:" + processExecution);
+          if(!!processExecution && processExecution.running === false){
+            $("#startGeneration").show();
+            $("#processingGeneration").hide();
+            clearInterval(timer);
+            if(processExecution.error === true){
+              $("#processResultDiv").removeClass("alert-success");
+              $("#processResultDiv").addClass("alert-danger");
+            } else {
+              $("#processResultDiv").removeClass("alert-danger");
+              $("#processResultDiv").addClass("alert-success");
+            }
+            $("#processResultMessage").text(processExecution.message);
+            $("#processResultDiv").show();
+          } else {
+            $("#processedMetrics").text(processExecution.processedItems + "/" + processExecution.totalItems)
+            $("#repositoriesExamples").text(processExecution.totalItems);
+          }
+        }
+  });
 }

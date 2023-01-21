@@ -31,7 +31,11 @@ public class RepoExampleMetrics {
     @OneToOne
     private Language defaultLang;
 
-    @OneToMany
+    @ManyToMany
+    @JoinTable(
+            name = "repo_metrics_languages",
+            joinColumns = @JoinColumn(name = "repo_metrics_id"),
+            inverseJoinColumns = @JoinColumn(name = "language_id"))
     private Set<Language> languages;
 
     @NotNull(message = "Number of files in the main language is mandatory")

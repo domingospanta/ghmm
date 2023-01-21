@@ -7,11 +7,11 @@
 
 <div layout:fragment="content">
     <div class="pagetitle">
-        <h1>List of Repositories Examples</h1>
+        <h1>List of Metrics Generated</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                <li class="breadcrumb-item">Repo Examples</li>
+                <li class="breadcrumb-item">Metrics</li>
                 <li class="breadcrumb-item active">List</li>
             </ol>
         </nav>
@@ -19,29 +19,41 @@
 
     <div class="card">
         <div class="card-body">
-            <div th:replace="~{fragments/searchBar :: searchBar('/repo/examples/all')}"> </div>
+            <div th:replace="~{fragments/searchBar :: searchBar('/metrics/all')}"> </div>
             <div class="container">
-            <label>[[${totalItems}]] result(s)</label>
+                <label>[[${totalItems}]] result(s)</label>
             </div>
             <!-- Table with stripped rows -->
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th scope="col">Id</th>
-                    <th scope="col">Owner</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">URL</th>
-                    <th scope="col">Microservice?</th>
+                    <th scope="col">Repo</th>
+                    <th scope="col">Size(kb)</th>
+                    <th scope="col">Lang(s)</th>
+                    <th scope="col">Contents#</th>
+                    <th scope="col">Ms Mention?</th>
+                    <th scope="col">BD?</th>
+                    <th scope="col">Dockerfile?</th>
+                    <th scope="col">Rest?</th>
+                    <th scope="col">Messaging?</th>
+                    <th scope="col">Soap?</th>
+                    <th scope="col">Logs?</th>
                 </tr>
                 </thead>
                 <tbody>
 
-                <tr th:each="example : ${repoExamples}">
-                    <th scope="row">[[${example.id}]]</th>
-                    <td>[[${example.owner}]]</td>
-                    <td>[[${example.appName}]]</td>
-                    <td>[[${example.url}]]</td>
-                    <td>[[${example.microservice}]]</td>
+                <tr th:each="metric : ${reposMetrics}">
+                    <th scope="row">[[${metric.repoExample.url}]]</th>
+                    <td>[[${metric.size}]]</td>
+                    <td>[[${metric.languages}]]</td>
+                    <td>[[${metric.allContentsNumber}]]</td>
+                    <td>[[${metric.microserviceMention}]]</td>
+                    <td>[[${metric.databaseConnection}]]</td>
+                    <td>[[${metric.dockerfile}]]</td>
+                    <td>[[${metric.restful}]]</td>
+                    <td>[[${metric.messaging}]]</td>
+                    <td>[[${metric.soap}]]</td>
+                    <td>[[${metric.logsService}]]</td>
                 </tr>
                 </tbody>
             </table>
@@ -51,26 +63,26 @@
             <nav aria-label="Pagination" th:if="${totalPages > 0}">
                 <ul class="pagination justify-content-center">
                     <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/examples/all', 1, '<<', 'First Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/metrics/all', 1, '<<', 'First Page')"></a>
                     </li>
                     <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/examples/all', ${currentPage - 1}, 'Prev', 'Previous Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${currentPage - 1}, 'Prev', 'Previous Page')"></a>
                     </li>
                     <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
                         <a class="page-link" href="#">...</a>
                     </li>
                     <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
                         th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
-                        <a th:replace="fragments/paging :: paging('/repo/examples/all', ${page}, ${page}, 'Page ' + ${page})"></a>
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${page}, ${page}, 'Page ' + ${page})"></a>
                     </li>
                     <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
                         <a class="page-link" href="#">...</a>
                     </li>
                     <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/examples/all', ${currentPage + 1},'Next', 'Next Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${currentPage + 1},'Next', 'Next Page')"></a>
                     </li>
                     <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/examples/all', ${totalPages}, '>>', 'Last Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${totalPages}, '>>', 'Last Page')"></a>
                     </li>
                 </ul>
             </nav>

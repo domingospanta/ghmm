@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html layout:decorate="~{page}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>Listing</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="pagetitle">
+        <h1>List of Metrics Generated</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item">Metrics</li>
+                <li class="breadcrumb-item active">Generation</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
+
+    <div class="row">
+
+        <!-- Left side columns -->
+        <div class="col-lg-12">
+            <div class="row">
+                <div class="col-xxl-4 col-md-4">
+                    <div class="card info-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Repositories Examples</h5>
+                            <div class="d-flex align-items-center">
+                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-boxes"></i>
+                                </div>
+                                <div class="ps-3">
+                                    <h1 id="repositoriesExamples">0</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xxl-4 col-md-4">
+                    <div class="card info-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Processed Metrics</h5>
+                            <div class="d-flex align-items-center">
+                                <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-boxes"></i>
+                                </div>
+                                <div class="ps-3">
+                                    <h1 id="processedMetrics">0/0</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xxl-4 col-md-4">
+                    <div class="card info-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Generation Status</h5>
+                            <div class="d-flex justify-content-center">
+                                <button id="startGeneration" onclick="startMetricsGeneration()" class="btn btn-primary" type="button"
+                                        th:style="${processing == false ? 'display:block' : 'display:none'}" >
+                                    <span id="startLabel">Start</span>
+                                </button>
+                                <button id="processingGeneration" class="btn btn-primary" type="button"
+                                        th:style="${processing == true ? 'display:block' : 'display:none'}" >
+                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    <span>Loading...</span>
+                                </button>
+                            </div>
+                            <div class="progress mt-3">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div id="processResultDiv" class="alert alert-dismissible fade show mt-3" role="alert" style="display: none">
+                                <p id="processResultMessage"></p>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+
+    </div>
+</div>
+</body>
+</html>

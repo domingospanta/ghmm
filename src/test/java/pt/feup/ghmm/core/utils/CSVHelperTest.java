@@ -73,11 +73,11 @@ class CSVHelperTest {
     @Test
     void getNameFromUrl() {
         String url = "";
-        String nameFromUrl = CSVHelper.getNameFromUrl(url);
+        String nameFromUrl = CSVHelper.getRepositoryNameFromUrl(url);
         assertEquals("", nameFromUrl);
 
         url = "https://github.com/instana/robot-shop";
-        nameFromUrl = CSVHelper.getNameFromUrl(url);
+        nameFromUrl = CSVHelper.getRepositoryNameFromUrl(url);
         assertEquals("robot-shop", nameFromUrl);
     }
 }
