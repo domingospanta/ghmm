@@ -171,7 +171,7 @@ public class RepoExampleMetricsService {
     }
 
     private boolean hasDatabaseConnection(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("database", "language:sql", "oracle", "mysql", "SQL Server", "redis", "IBM BD2", "Elasticsearch", "SQLite",
+        List<String> queryFragments = Arrays.asList("database", "language:sql", "oracle", "mysql", "SQL Server", "SQLite",
                 "postgres", "cassandra", "mongodb");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
@@ -217,7 +217,7 @@ public class RepoExampleMetricsService {
     }
 
     private boolean hasLogsService(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("logstash", "Datadog", "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Splunk", "Fluentd", "Logtail");
+        List<String> queryFragments = Arrays.asList("logstash", "Datadog", "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Fluentd");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){

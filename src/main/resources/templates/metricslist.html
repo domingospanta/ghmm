@@ -17,8 +17,8 @@
         </nav>
     </div><!-- End Page Title -->
 
-    <div class="card">
-        <div class="card-body">
+    <div class="card container" >
+        <div class="card-body table-responsive">
             <div th:replace="~{fragments/searchBar :: searchBar('/metrics/all')}"> </div>
             <div class="container">
                 <label>[[${totalItems}]] result(s)</label>
@@ -43,9 +43,15 @@
                 <tbody>
 
                 <tr th:each="metric : ${reposMetrics}">
-                    <th scope="row">[[${metric.repoExample.url}]]</th>
+                    <th scope="row">
+                        <a th:href="@{${metric.repoExample.url}}" target="_blank">[[${metric.repoExample.name}]]</a>
+                    </th>
                     <td>[[${metric.size}]]</td>
-                    <td>[[${metric.languages}]]</td>
+                    <td>
+                        <th:block th:each="language : ${metric.languages}">
+                            [[${language.name}]]
+                        </th:block>
+                    </td>
                     <td>[[${metric.allContentsNumber}]]</td>
                     <td>[[${metric.microserviceMention}]]</td>
                     <td>[[${metric.databaseConnection}]]</td>

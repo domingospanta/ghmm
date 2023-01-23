@@ -40,7 +40,9 @@
                     <th scope="row">[[${example.id}]]</th>
                     <td>[[${example.owner}]]</td>
                     <td>[[${example.appName}]]</td>
-                    <td>[[${example.url}]]</td>
+                    <td>
+                        <a th:href="@{${example.url}}" target="_blank">[[${example.url}]]</a>
+                    </td>
                     <td>[[${example.microservice}]]</td>
                 </tr>
                 </tbody>
