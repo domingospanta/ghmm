@@ -14,6 +14,7 @@ import pt.feup.ghmm.core.dtos.ContentDto;
 import pt.feup.ghmm.core.dtos.MainRepositoryDto;
 import pt.feup.ghmm.core.dtos.SearchResultDto;
 import pt.feup.ghmm.core.services.GitHubApiService;
+import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.models.Language;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
@@ -102,10 +103,103 @@ public class RepoExampleMetricsService {
         return processExecution;
     }
 
+    public long findMaxRepoFiles(){
+        return repository.findMaxRepoFiles();
+    }
+
+    public long findMinRepoFiles(){
+        return repository.findMinRepoFiles();
+    }
+
+    public long findAverageRepoFiles(){
+        return repository.findAverageRepoFiles();
+    }
+
+    public long findMaxRepoAllContentsNumber(){
+        return repository.findMaxRepoAllContentsNumber();
+    }
+
+    public long findMinRepoAllContentsNumber(){
+        return repository.findMinRepoAllContentsNumber();
+    }
+
+    public long findAverageRepoAllContentsNumber(){
+        return repository.findAverageRepoAllContentsNumber();
+    }
+
+    public long findMaxSize(){
+        return repository.findMaxSize();
+    }
+
+    public long findMinSize(){
+        return repository.findMinSize();
+    }
+
+    public long findAverageSize(){
+        return repository.findAverageSize();
+    }
+
+    public long countByMicroserviceMentionTrue(){
+        return repository.countByMicroserviceMentionTrue();
+    }
+
+    public long countByMicroserviceMentionFalse(){
+        return repository.countByMicroserviceMentionFalse();
+    }
+
+    public long countByDatabaseConnectionTrue(){
+        return repository.countByDatabaseConnectionTrue();
+    }
+
+    public long countByDatabaseConnectionFalse(){
+        return repository.countByDatabaseConnectionFalse();
+    }
+
+    public long countByDockerfileTrue(){
+        return repository.countByDockerfileTrue();
+    }
+
+    public long countByDockerfileFalse(){
+        return repository.countByDockerfileFalse();
+    }
+
+    public long countByRestfulTrue(){
+        return repository.countByRestfulTrue();
+    }
+
+    public long countByRestfulFalse(){
+        return repository.countByRestfulFalse();
+    }
+
+    public long countByMessagingTrue(){
+        return repository.countByMessagingTrue();
+    }
+
+    public long countByMessagingFalse(){
+        return repository.countByMessagingFalse();
+    }
+
+    public long countBySoapTrue(){
+        return repository.countBySoapTrue();
+    }
+
+    public long countBySoapFalse(){
+        return repository.countBySoapFalse();
+    }
+
+    public long countByLogsServiceTrue(){
+        return repository.countByLogsServiceTrue();
+    }
+
+    public long countByLogsServiceFalse(){
+        return repository.countByLogsServiceFalse();
+    }
+
     private RepoExampleMetrics fetchMetrics(RepoExample repoExample) throws HttpClientErrorException.Forbidden{
         try {
             MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
             if(mainRepositoryDto == null) return null;
+            repoExample = repoExampleService.update(repoExample, mainRepositoryDto);
 
             return RepoExampleMetrics.builder()
                     .repoExample(repoExample)
@@ -230,5 +324,42 @@ public class RepoExampleMetricsService {
     public ProcessExecution getProcessExecutionById(Long id) {
         Optional<ProcessExecution> processExecution = processExecutionRepository.findById(id);
         return processExecution.orElse(null);
+    }
+
+    public Page<RepoExampleMetrics> findByRepoExamples(String keyword, Pageable paging) {
+        return repository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
+    }
+
+    public long countAll() {
+        return repository.count();
+    }
+
+    public MetricsStatisticsDto getMetricsStatistics() {
+        return MetricsStatisticsDto.builder()
+                .totalMetrics(countAll())
+                .maxRepoFiles(findMaxRepoFiles())
+                .minRepoFiles(findMinRepoFiles())
+                .averageRepoFiles(findAverageRepoFiles())
+                .maxRepoAllContentsNumber(findMaxRepoAllContentsNumber())
+                .minRepoAllContentsNumber(findMinRepoAllContentsNumber())
+                .averageRepoAllContentsNumber(findAverageRepoAllContentsNumber())
+                .maxSize(findMaxSize())
+                .minSize(findMinSize())
+                .averageSize(findAverageSize())
+                .countByMicroserviceMentionTrue(countByMicroserviceMentionTrue())
+                .countByMicroserviceMentionFalse(countByMicroserviceMentionFalse())
+                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue())
+                .countByDatabaseConnectionFalse(countByDatabaseConnectionFalse())
+                .countByDockerfileTrue(countByDockerfileTrue())
+                .countByDockerfileFalse(countByDockerfileFalse())
+                .countByRestfulTrue(countByRestfulTrue())
+                .countByRestfulFalse(countByRestfulFalse())
+                .countByMessagingTrue(countByMessagingTrue())
+                .countByMessagingFalse(countByMessagingFalse())
+                .countBySoapTrue(countBySoapTrue())
+                .countBySoapFalse(countBySoapFalse())
+                .countByLogsServiceTrue(countByLogsServiceTrue())
+                .countByLogsServiceFalse(countByLogsServiceFalse())
+                .build();
     }
 }

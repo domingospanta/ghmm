@@ -6,8 +6,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
+import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
 import pt.feup.ghmm.metrics.services.RepoExampleMetricsService;
 import pt.feup.ghmm.metrics.services.RepoExampleService;
@@ -22,6 +24,7 @@ public class MetricsController {
     private RepoExampleService repoExampleService;
     private final String LIST_PAGE = "metricslist";
     private final String GENERATE_PAGE = "metricsgeneration";
+    private final String STATISTICS_PAGE = "metricsstatistics";
     private ProcessExecution processExecution;
 
     public MetricsController(RepoExampleMetricsService repoExampleMetricsService, RepoExampleService repoExampleService) {
@@ -38,7 +41,13 @@ public class MetricsController {
             List<RepoExampleMetrics> repoExampleMetrics;
             Pageable paging = PageRequest.of(page - 1, size);
 
-            Page<RepoExampleMetrics> pageTuts = repoExampleMetricsService.findAll(paging);
+            Page<RepoExampleMetrics> pageTuts;
+            if (keyword == null) {
+                pageTuts = repoExampleMetricsService.findAll(paging);
+            } else {
+                pageTuts = repoExampleMetricsService.findByRepoExamples(keyword, paging);
+                model.addAttribute("keyword", keyword);
+            }
 
             repoExampleMetrics = pageTuts.getContent();
 
@@ -57,6 +66,11 @@ public class MetricsController {
     @GetMapping("/generation")
     public String getMetricsGenerationPage(Model model){
         model.addAttribute("processing", processExecution != null && processExecution.isRunning());
+        long processedTrue = repoExampleService.countAllByProcessedTrue();
+        long processedFalse = repoExampleService.countAllByProcessedFalse();
+        model.addAttribute("examplesTotal", processedTrue + processedFalse);
+        model.addAttribute("examplesProcessedTrueTotal", processedTrue);
+        model.addAttribute("examplesProcessedFalseTotal", processedFalse);
         return GENERATE_PAGE;
     }
 
@@ -83,9 +97,10 @@ public class MetricsController {
     }
 
 
-    @PostMapping("/generate")
-    public String generateMetrics(Model model) {
-        return GENERATE_PAGE;
+    @GetMapping("/statistics")
+    public String getMetricsStatisticsPage(Model model){
+        MetricsStatisticsDto metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics();
+        model.addAttribute("metrics", metricsStatisticsDto);
+        return STATISTICS_PAGE;
     }
-
 }

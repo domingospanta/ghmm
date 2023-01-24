@@ -106,8 +106,7 @@ function metricsStatusRequest() {
             $("#processResultMessage").text(processExecution.message);
             $("#processResultDiv").show();
           } else {
-            $("#processedMetrics").text(processExecution.processedItems + "/" + processExecution.totalItems)
-            $("#repositoriesExamples").text(processExecution.totalItems);
+            $("#unprocessedMetrics").text(processExecution.processedItems + "/" + processExecution.totalItems)
           }
         }
   });

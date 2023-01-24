@@ -16,6 +16,9 @@ import java.util.List;
 public class MainRepositoryDto {
     private String name;
 
+    @JsonProperty("html_url")
+    private String url;
+
     private String description;
 
     private long size;
