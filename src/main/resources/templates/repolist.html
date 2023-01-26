@@ -18,25 +18,39 @@
     </div><!-- End Page Title -->
 
     <div class="card">
-        <div class="card-body">
+        <div class="card-body table-responsive">
             <div th:replace="~{fragments/searchBar :: searchBar('/repo/examples/all')}"> </div>
             <div class="container">
-            <label>[[${totalItems}]] result(s)</label>
+                <label>[[${totalItems}]] result(s)</label>
+
+                <div th:if="${result != null}">
+                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                </div>
             </div>
             <!-- Table with stripped rows -->
             <table class="table table-striped">
                 <thead>
                 <tr>
+                    <th scope="col"></th>
                     <th scope="col">Id</th>
                     <th scope="col">Owner</th>
                     <th scope="col">Name</th>
                     <th scope="col">URL</th>
-                    <th scope="col">Microservice?</th>
+                    <th scope="col">Ms?</th>
+                    <th scope="col">Processed?</th>
+                    <th scope="col">Error?</th>
                 </tr>
                 </thead>
                 <tbody>
 
                 <tr th:each="example : ${repoExamples}">
+                    <td>
+                        <a th:href="@{'/repo/examples/delete/' + ${example.id}}" id="btnDelete"
+                           title="Delete this tutorial" class="fa-regular fa-trash-can icon-dark btn-delete">
+                            <i class="bi bi-archive-fill"></i>
+                        </a>
+                    </td>
+
                     <th scope="row">[[${example.id}]]</th>
                     <td>[[${example.owner}]]</td>
                     <td>[[${example.appName}]]</td>
@@ -44,6 +58,8 @@
                         <a th:href="@{${example.url}}" target="_blank">[[${example.url}]]</a>
                     </td>
                     <td>[[${example.microservice}]]</td>
+                    <td>[[${example.processed}]]</td>
+                    <td>[[${example.processingError}]]</td>
                 </tr>
                 </tbody>
             </table>

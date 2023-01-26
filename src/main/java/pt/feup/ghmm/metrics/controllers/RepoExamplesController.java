@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoExampleUploadDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
@@ -61,6 +62,17 @@ public class RepoExamplesController {
     @GetMapping("/upload")
     public String getRepoExamplesPage(Model model){
         return prepareDataForUploadPage(model);
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteRepoExample(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+        RepoExample repoExample = repoExampleService.findById(id);
+        if(repoExample != null){
+            RepoResult repoResult = repoExampleService.delete(repoExample);
+            redirectAttributes.addFlashAttribute("result", repoResult);
+        }
+
+        return "redirect:/repo/examples/all";
     }
 
     @PostMapping("/add")

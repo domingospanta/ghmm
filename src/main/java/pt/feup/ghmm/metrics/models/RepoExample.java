@@ -36,4 +36,8 @@ public class RepoExample {
     private boolean microservice;
 
     private boolean processed;
+
+    private boolean processingError;
+
+    private boolean message;
 }

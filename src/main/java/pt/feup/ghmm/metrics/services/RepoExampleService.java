@@ -6,6 +6,8 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import org.apache.groovy.parser.antlr4.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,9 @@ import static pt.feup.ghmm.core.utils.CSVHelper.getRepositoryNameFromUrl;
 @AllArgsConstructor
 @Service
 public class RepoExampleService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RepoExampleService.class);
+
     private RepoExampleRepository repository;
 
     public List<RepoResult> save(MultipartFile file) {
@@ -34,6 +39,35 @@ public class RepoExampleService {
         } catch (IOException e) {
             throw new RuntimeException("fail to store csv data: " + e.getMessage());
         }
+    }
+
+    public RepoExample findById(Long id){
+        if(id == null) return null;
+        try {
+            return repository.findById(id).orElse(null);
+        } catch (Exception exception){
+            logger.error("Error deleting repo of id: " + id, exception);
+            return null;
+        }
+    }
+
+    public RepoResult delete(RepoExample repoExample){
+        try {
+            if(repoExample == null) return null;
+            repository.deleteById(repoExample.getId());
+        } catch (Exception exception){
+            logger.error("Error deleting repo:" + repoExample.getUrl(), exception);
+            return RepoResult.builder()
+                    .repo(repoExample.getUrl())
+                    .error(true)
+                    .message(" error " + exception.getMessage() )
+                    .build();
+        }
+        return RepoResult.builder()
+                .repo(repoExample.getUrl())
+                .error(false)
+                .message(" deletion successful!")
+                .build();
     }
 
     private List<RepoResult> saveAll(List<RepoExample> repoExamples) {

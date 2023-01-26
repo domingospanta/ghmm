@@ -220,7 +220,13 @@ public class RepoExampleMetricsService {
         } catch (HttpClientErrorException.Forbidden exception){
             logger.error("Error processing repo: " + repoExample.getUrl(), exception);
             throw exception;
-        } catch (Exception exception){
+        } catch (HttpClientErrorException.NotFound exception){
+            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
+            repoExample.setProcessingError(true);
+            repoExample.setProcessed(true);
+            repoExampleService.save(repoExample);
+        }
+        catch (Exception exception){
             logger.error("Error processing repo: " + repoExample.getUrl());
         }
         return null;
