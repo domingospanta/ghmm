@@ -66,11 +66,13 @@ public class MetricsController {
     @GetMapping("/generation")
     public String getMetricsGenerationPage(Model model){
         model.addAttribute("processing", processExecution != null && processExecution.isRunning());
-        long processedTrue = repoExampleService.countAllByProcessedTrue();
-        long processedFalse = repoExampleService.countAllByProcessedFalse();
-        model.addAttribute("examplesTotal", processedTrue + processedFalse);
-        model.addAttribute("examplesProcessedTrueTotal", processedTrue);
-        model.addAttribute("examplesProcessedFalseTotal", processedFalse);
+        long processedWithoutErrorTotal = repoExampleService.countAllByProcessedTrueAndProcessingErrorFalse();
+        long processedWithErrorTotal = repoExampleService.countAllByProcessedTrueAndProcessingErrorTrue();
+        long unprocessed = repoExampleService.countAllByProcessedFalse();
+        model.addAttribute("examplesTotal", repoExampleService.countAll());
+        model.addAttribute("processedWithoutErrorTotal", processedWithoutErrorTotal);
+        model.addAttribute("processedWithErrorTotal", processedWithErrorTotal);
+        model.addAttribute("unprocessedTotal", unprocessed);
         return GENERATE_PAGE;
     }
 

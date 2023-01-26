@@ -38,29 +38,43 @@ public class MetricsStatisticsDto extends ResponseMessage {
 
     long countByMicroserviceMentionFalse;
 
+    float microserviceMentionPercentage;
+
     long countByDatabaseConnectionTrue;
 
     long countByDatabaseConnectionFalse;
+
+    float databaseConnectionPercentage;
 
     long countByDockerfileTrue;
 
     long countByDockerfileFalse;
 
+    float dockerfilePercentage;
+
     long countByRestfulTrue;
 
     long countByRestfulFalse;
+
+    float restfulPercentage;
 
     long countByMessagingTrue;
 
     long countByMessagingFalse;
 
+    float messagingPercentage;
+
     long countBySoapTrue;
 
     long countBySoapFalse;
 
+    float soapPercentage;
+
     long countByLogsServiceTrue;
 
     long countByLogsServiceFalse;
+
+    float logsServicePercentage;
 }
 
 

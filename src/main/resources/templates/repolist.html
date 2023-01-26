@@ -59,7 +59,9 @@
                     </td>
                     <td>[[${example.microservice}]]</td>
                     <td>[[${example.processed}]]</td>
-                    <td>[[${example.processingError}]]</td>
+                    <td th:attr="class=${example.processingError == true ? 'table-danger' : 'table-success'}">
+                        [[${example.processingError}]]
+                    </td>
                 </tr>
                 </tbody>
             </table>

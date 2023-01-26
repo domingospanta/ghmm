@@ -21,7 +21,7 @@ public class RepoExampleMetrics {
     private Long id;
 
     @NotNull(message = "RepoExample is mandatory")
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     private RepoExample repoExample;
 
     @NotNull(message = "Size (in KB) is mandatory")

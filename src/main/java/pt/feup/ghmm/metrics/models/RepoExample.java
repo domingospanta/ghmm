@@ -39,5 +39,5 @@ public class RepoExample {
 
     private boolean processingError;
 
-    private boolean message;
+    private String message;
 }

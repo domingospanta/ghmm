@@ -90,13 +90,24 @@ public class RepoExampleService {
         return repository.findByUrlContainingIgnoreCase(keyword, paging);
     }
 
+
+    public long countAllByProcessedTrueAndProcessingErrorFalse() {
+        return repository.countAllByProcessedTrueAndProcessingErrorFalse();
+    }
+
+    public long countAllByProcessedTrueAndProcessingErrorTrue() {
+        return repository.countAllByProcessedTrueAndProcessingErrorTrue();
+    }
+
     public long countAllByProcessedFalse() {
         return repository.countAllByProcessedFalse();
     }
 
-    public long countAllByProcessedTrue() {
-        return repository.countAllByProcessedTrue();
+    public long countAll() {
+        return repository.count();
     }
+
+
 
     public RepoResult save(RepoExampleDto repoExampleDto) {
             RepoExample repoExample = RepoExample

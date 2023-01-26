@@ -15,6 +15,7 @@ import java.util.List;
 public interface RepoExampleRepository extends CrudRepository<RepoExample, Long>, PagingAndSortingRepository<RepoExample, Long> {
     Page<RepoExample> findByUrlContainingIgnoreCase(String url, Pageable pageable);
     List<RepoExample> findByProcessedFalse();
+    long countAllByProcessedTrueAndProcessingErrorFalse();
+    long countAllByProcessedTrueAndProcessingErrorTrue();
     long countAllByProcessedFalse();
-    long countAllByProcessedTrue();
 }

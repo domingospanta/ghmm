@@ -73,10 +73,8 @@ public class RepoExampleMetricsService {
                 metrics.add(repoMetrics);
                 repository.save(repoMetrics);
                 repoExample.setProcessed(true);
-            } else {
-                repoExample.setProcessed(false);
+                repoExampleService.save(repoExample);
             }
-            repoExampleService.save(repoExample);
         } catch (Exception exception) {
             logger.error("Error saving metrics por repo: " + repoExample.getUrl(), exception);
         }
@@ -224,6 +222,7 @@ public class RepoExampleMetricsService {
             logger.error("Error processing repo: " + repoExample.getUrl(), exception);
             repoExample.setProcessingError(true);
             repoExample.setProcessed(true);
+            repoExample.setMessage(exception.getMessage());
             repoExampleService.save(repoExample);
         }
         catch (Exception exception){
@@ -336,36 +335,58 @@ public class RepoExampleMetricsService {
         return repository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
     }
 
+    public RepoExampleMetrics findByRepoExample(RepoExample repoExample) {
+        return repository.findByRepoExample(repoExample);
+    }
+
     public long countAll() {
         return repository.count();
     }
 
     public MetricsStatisticsDto getMetricsStatistics() {
+        float totalCount = countAll();
+        if(totalCount == 0) return MetricsStatisticsDto.builder().build();
+        long countByMicroserviceMentionTrue = countByMicroserviceMentionTrue();
+        long countByDatabaseConnectionTrue = countByDatabaseConnectionTrue();
+        long countByDockerfileTrue = countByDockerfileTrue();
+        long countByRestfulTrue = countByRestfulTrue();
+        long countByMessagingTrue = countByMessagingTrue();
+        long countBySoapTrue = countBySoapTrue();
+        long countByLogsServiceTrue = countByLogsServiceTrue();
         return MetricsStatisticsDto.builder()
-                .totalMetrics(countAll())
+                .totalMetrics((long) totalCount)
                 .maxRepoFiles(findMaxRepoFiles())
                 .minRepoFiles(findMinRepoFiles())
                 .averageRepoFiles(findAverageRepoFiles())
                 .maxRepoAllContentsNumber(findMaxRepoAllContentsNumber())
-                .minRepoAllContentsNumber(findMinRepoAllContentsNumber())
                 .averageRepoAllContentsNumber(findAverageRepoAllContentsNumber())
                 .maxSize(findMaxSize())
                 .minSize(findMinSize())
                 .averageSize(findAverageSize())
-                .countByMicroserviceMentionTrue(countByMicroserviceMentionTrue())
+                .countByMicroserviceMentionTrue(countByMicroserviceMentionTrue)
                 .countByMicroserviceMentionFalse(countByMicroserviceMentionFalse())
-                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue())
+                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue)
                 .countByDatabaseConnectionFalse(countByDatabaseConnectionFalse())
-                .countByDockerfileTrue(countByDockerfileTrue())
+                .microserviceMentionPercentage(getPercentage(countByMicroserviceMentionTrue, totalCount))
+                .countByDockerfileTrue(countByDockerfileTrue)
                 .countByDockerfileFalse(countByDockerfileFalse())
-                .countByRestfulTrue(countByRestfulTrue())
+                .dockerfilePercentage(getPercentage(countByDockerfileTrue, totalCount))
+                .countByRestfulTrue(countByRestfulTrue)
                 .countByRestfulFalse(countByRestfulFalse())
-                .countByMessagingTrue(countByMessagingTrue())
+                .restfulPercentage(getPercentage(countByRestfulTrue , totalCount))
+                .countByMessagingTrue(countByMessagingTrue)
                 .countByMessagingFalse(countByMessagingFalse())
-                .countBySoapTrue(countBySoapTrue())
+                .messagingPercentage(getPercentage(countByMessagingTrue , totalCount))
+                .countBySoapTrue(countBySoapTrue)
                 .countBySoapFalse(countBySoapFalse())
-                .countByLogsServiceTrue(countByLogsServiceTrue())
+                .soapPercentage(getPercentage(countBySoapTrue, totalCount))
+                .countByLogsServiceTrue(countByLogsServiceTrue)
                 .countByLogsServiceFalse(countByLogsServiceFalse())
+                .logsServicePercentage(getPercentage(countByLogsServiceTrue , totalCount))
                 .build();
+    }
+
+    private float getPercentage(long numerator, float denominator) {
+        return Math.round((numerator / denominator) * 100);
     }
 }
