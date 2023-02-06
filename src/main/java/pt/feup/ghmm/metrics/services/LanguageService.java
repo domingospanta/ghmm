@@ -24,6 +24,9 @@ public class LanguageService {
     private LanguageRepository repository;
 
     public Language findOrCreateByName(String name) {
+        if(name == null){
+            name = "undefined";
+        }
         Language language = repository.findByName(name);
         if(language != null) return language;
 

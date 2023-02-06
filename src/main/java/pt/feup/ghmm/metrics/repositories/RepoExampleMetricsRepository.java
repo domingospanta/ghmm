@@ -6,14 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
-import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
+
+import java.util.List;
 
 @Repository
 public interface RepoExampleMetricsRepository extends CrudRepository<RepoExampleMetrics, Long>, PagingAndSortingRepository<RepoExampleMetrics, Long> {
+
+    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderBySizeAsc(boolean microservice);
+
     Page<RepoExampleMetrics> findByRepoExampleUrlContainingIgnoreCase(String keyword, Pageable paging);
 
-    RepoExampleMetrics findByRepoExample(RepoExample repoExample);
+    long countAllByRepoExampleMicroservice(boolean microservice);
 
     @Query(value = "SELECT max(files) FROM RepoExampleMetrics")
     long findMaxRepoFiles();
@@ -24,6 +28,10 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
     @Query(value = "SELECT avg(files) FROM RepoExampleMetrics")
     long findAverageRepoFiles();
 
+    @Query(value = "SELECT sum(files) FROM RepoExampleMetrics" +
+            " WHERE RepoExampleMetrics.repoExample.microservice =: microservice")
+    long findSumRepoFiles( boolean microservice);
+
     @Query(value = "SELECT max(allContentsNumber) FROM RepoExampleMetrics")
     long findMaxRepoAllContentsNumber();
 
@@ -32,6 +40,10 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
 
     @Query(value = "SELECT avg(allContentsNumber) FROM RepoExampleMetrics")
     long findAverageRepoAllContentsNumber();
+
+    @Query(value = "SELECT sum(allContentsNumber) FROM RepoExampleMetrics" +
+            " WHERE RepoExampleMetrics.repoExample.microservice =: microservice")
+    long findSumRepoAllContentsNumber(boolean microservice);
 
     @Query(value = "SELECT max(metric.size) FROM RepoExampleMetrics as metric")
     long findMaxSize();
@@ -42,31 +54,35 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
     @Query(value = "SELECT avg(metric.size) FROM RepoExampleMetrics as metric")
     long findAverageSize();
 
-    long countByMicroserviceMentionTrue();
+    @Query(value = "SELECT sum(metric.size) FROM RepoExampleMetrics as metric" +
+            " WHERE RepoExampleMetrics.repoExample.microservice =: microservice")
+    long findSumSize(boolean microservice);
 
-    long countByMicroserviceMentionFalse();
+    long countByMicroserviceMentionTrueAndRepoExampleMicroservice(boolean microservice);
 
-    long countByDatabaseConnectionTrue();
+    long countByMicroserviceMentionFalseAndRepoExampleMicroservice(boolean microservice);
 
-    long countByDatabaseConnectionFalse();
+    long countByDatabaseConnectionTrueAndRepoExampleMicroservice(boolean microservice);
 
-    long countByDockerfileTrue();
+    long countByDatabaseConnectionFalseAndRepoExampleMicroservice(boolean microservice);
 
-    long countByDockerfileFalse();
+    long countByDockerfileTrueAndRepoExampleMicroservice(boolean microservice);
 
-    long countByRestfulTrue();
+    long countByDockerfileFalseAndRepoExampleMicroservice(boolean microservice);
 
-    long countByRestfulFalse();
+    long countByRestfulTrueAndRepoExampleMicroservice(boolean microservice);
 
-    long countByMessagingTrue();
+    long countByRestfulFalseAndRepoExampleMicroservice(boolean microservice);
 
-    long countByMessagingFalse();
+    long countByMessagingTrueAndRepoExampleMicroservice(boolean microservice);
 
-    long countBySoapTrue();
+    long countByMessagingFalseAndRepoExampleMicroservice(boolean microservice);
 
-    long countBySoapFalse();
+    long countBySoapTrueAndRepoExampleMicroservice(boolean microservice);
 
-    long countByLogsServiceTrue();
+    long countBySoapFalseAndRepoExampleMicroservice(boolean microservice);
 
-    long countByLogsServiceFalse();
+    long countByLogsServiceTrueAndRepoExampleMicroservice(boolean microservice);
+
+    long countByLogsServiceFalseAndRepoExampleMicroservice(boolean microservice);
 }

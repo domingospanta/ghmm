@@ -41,12 +41,14 @@ public class RepoExampleMetricsService {
 
     private RepoExampleService repoExampleService;
 
+    MetricsDerivationService metricsDerivationService;
+
     public Page<RepoExampleMetrics> findAll(Pageable paging) {
         return repository.findAll(paging);
     }
 
     @Async
-    public CompletableFuture<List<RepoExampleMetrics>> generateMetrics(ProcessExecution processExecution, List<RepoExample> repoExamples){
+    public CompletableFuture<List<RepoExampleMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<RepoExample> repoExamples){
         if(CollectionUtils.isEmpty(repoExamples)){
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted: nothing to process.", false, false);
             return CompletableFuture.completedFuture(new ArrayList<>());
@@ -60,6 +62,7 @@ public class RepoExampleMetricsService {
                 saveStatusRepoExampleMetrics(repoMetrics, metrics, repoExample);
                 saveProcessExecution(processExecution, repoExamples.size(), i+1, "Progressing execution.", true, false);
             }
+            metricsDerivationService.runMetricsDerivation();
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Finished execution successfully.", false, false);
         } catch (HttpClientErrorException.Forbidden exception){
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted due to Git Rest API client error.", false, true);
@@ -137,60 +140,60 @@ public class RepoExampleMetricsService {
         return repository.findAverageSize();
     }
 
-    public long countByMicroserviceMentionTrue(){
-        return repository.countByMicroserviceMentionTrue();
+    public long countByMicroserviceMentionTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByMicroserviceMentionTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByMicroserviceMentionFalse(){
-        return repository.countByMicroserviceMentionFalse();
+    public long countByMicroserviceMentionFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByMicroserviceMentionFalseAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByDatabaseConnectionTrue(){
-        return repository.countByDatabaseConnectionTrue();
+    public long countByDatabaseConnectionTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByDatabaseConnectionTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByDatabaseConnectionFalse(){
-        return repository.countByDatabaseConnectionFalse();
+    public long countByDatabaseConnectionFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByDatabaseConnectionFalseAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByDockerfileTrue(){
-        return repository.countByDockerfileTrue();
+    public long countByDockerfileTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByDockerfileTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByDockerfileFalse(){
-        return repository.countByDockerfileFalse();
+    public long countByDockerfileFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByDockerfileFalseAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByRestfulTrue(){
-        return repository.countByRestfulTrue();
+    public long countByRestfulTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByRestfulTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByRestfulFalse(){
-        return repository.countByRestfulFalse();
+    public long countByRestfulFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByRestfulFalseAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByMessagingTrue(){
-        return repository.countByMessagingTrue();
+    public long countByMessagingTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByMessagingTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByMessagingFalse(){
-        return repository.countByMessagingFalse();
+    public long countByMessagingFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByMessagingFalseAndRepoExampleMicroservice(microservice);
     }
 
-    public long countBySoapTrue(){
-        return repository.countBySoapTrue();
+    public long countBySoapTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countBySoapTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countBySoapFalse(){
-        return repository.countBySoapFalse();
+    public long countBySoapFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countBySoapFalseAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByLogsServiceTrue(){
-        return repository.countByLogsServiceTrue();
+    public long countByLogsServiceTrueAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByLogsServiceTrueAndRepoExampleMicroservice(microservice);
     }
 
-    public long countByLogsServiceFalse(){
-        return repository.countByLogsServiceFalse();
+    public long countByLogsServiceFalseAndRepoExampleMicroservice(boolean microservice){
+        return repository.countByLogsServiceFalseAndRepoExampleMicroservice(microservice);
     }
 
     private RepoExampleMetrics fetchMetrics(RepoExample repoExample) throws HttpClientErrorException.Forbidden{
@@ -205,7 +208,7 @@ public class RepoExampleMetricsService {
                     .defaultBranch(mainRepositoryDto.getDefaultBranch())
                     .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
                     .languages(getLanguages(repoExample))
-                    .files(getFilesCount(repoExample))
+                    .files(getFilesCount(repoExample, mainRepositoryDto.getDefaultBranch()))
                     .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
                     .microserviceMention(hasMicroserviceMention(repoExample))
                     .databaseConnection(hasDatabaseConnection(repoExample))
@@ -248,9 +251,18 @@ public class RepoExampleMetricsService {
         return languageService.findOrCreateByName(lang);
     }
 
-    private long getFilesCount(RepoExample repoExample) {
-        ContentDto[] contents = gitHubApiService.getRootContentsData(repoExample.getOwner(), repoExample.getName());
-        return contents != null ? contents.length : 0;
+    private long getFilesCount(RepoExample repoExample, String defaultBranch) {
+        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
+        int filesCount = 0;
+        final String FILES_TYPE = "blob";
+        if(!CollectionUtils.isEmpty(allContentDto.getTree())){
+            for(ContentDto contentDto: allContentDto.getTree()){
+                if(FILES_TYPE.equals(contentDto.getType())){
+                    filesCount++;
+                }
+            }
+        }
+        return filesCount;
     }
 
     private long getContentsNumber(RepoExample repoExample, String defaultBranch) {
@@ -335,53 +347,51 @@ public class RepoExampleMetricsService {
         return repository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
     }
 
-    public RepoExampleMetrics findByRepoExample(RepoExample repoExample) {
-        return repository.findByRepoExample(repoExample);
+    public long countAllByMicroservice(boolean microservice) {
+        return repository.countAllByRepoExampleMicroservice(microservice);
     }
 
-    public long countAll() {
-        return repository.count();
-    }
-
-    public MetricsStatisticsDto getMetricsStatistics() {
-        float totalCount = countAll();
+    public MetricsStatisticsDto getMetricsStatistics(boolean microservice) {
+        float totalCount = countAllByMicroservice(microservice);
         if(totalCount == 0) return MetricsStatisticsDto.builder().build();
-        long countByMicroserviceMentionTrue = countByMicroserviceMentionTrue();
-        long countByDatabaseConnectionTrue = countByDatabaseConnectionTrue();
-        long countByDockerfileTrue = countByDockerfileTrue();
-        long countByRestfulTrue = countByRestfulTrue();
-        long countByMessagingTrue = countByMessagingTrue();
-        long countBySoapTrue = countBySoapTrue();
-        long countByLogsServiceTrue = countByLogsServiceTrue();
+        long countByMicroserviceMentionTrue = countByMicroserviceMentionTrueAndRepoExampleMicroservice(microservice);
+        long countByDatabaseConnectionTrue = countByDatabaseConnectionTrueAndRepoExampleMicroservice(microservice);
+        long countByDockerfileTrue = countByDockerfileTrueAndRepoExampleMicroservice(microservice);
+        long countByRestfulTrue = countByRestfulTrueAndRepoExampleMicroservice(microservice);
+        long countByMessagingTrue = countByMessagingTrueAndRepoExampleMicroservice(microservice);
+        long countBySoapTrue = countBySoapTrueAndRepoExampleMicroservice(microservice);
+        long countByLogsServiceTrue = countByLogsServiceTrueAndRepoExampleMicroservice(microservice);
         return MetricsStatisticsDto.builder()
                 .totalMetrics((long) totalCount)
                 .maxRepoFiles(findMaxRepoFiles())
                 .minRepoFiles(findMinRepoFiles())
                 .averageRepoFiles(findAverageRepoFiles())
                 .maxRepoAllContentsNumber(findMaxRepoAllContentsNumber())
+                .minRepoAllContentsNumber(findMinRepoAllContentsNumber())
                 .averageRepoAllContentsNumber(findAverageRepoAllContentsNumber())
                 .maxSize(findMaxSize())
                 .minSize(findMinSize())
                 .averageSize(findAverageSize())
                 .countByMicroserviceMentionTrue(countByMicroserviceMentionTrue)
-                .countByMicroserviceMentionFalse(countByMicroserviceMentionFalse())
-                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue)
-                .countByDatabaseConnectionFalse(countByDatabaseConnectionFalse())
+                .countByMicroserviceMentionFalse(countByMicroserviceMentionFalseAndRepoExampleMicroservice(microservice))
                 .microserviceMentionPercentage(getPercentage(countByMicroserviceMentionTrue, totalCount))
+                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue)
+                .countByDatabaseConnectionFalse(countByDatabaseConnectionFalseAndRepoExampleMicroservice(microservice))
+                .databaseConnectionPercentage(getPercentage(countByDatabaseConnectionTrue, totalCount))
                 .countByDockerfileTrue(countByDockerfileTrue)
-                .countByDockerfileFalse(countByDockerfileFalse())
+                .countByDockerfileFalse(countByDockerfileFalseAndRepoExampleMicroservice(microservice))
                 .dockerfilePercentage(getPercentage(countByDockerfileTrue, totalCount))
                 .countByRestfulTrue(countByRestfulTrue)
-                .countByRestfulFalse(countByRestfulFalse())
+                .countByRestfulFalse(countByRestfulFalseAndRepoExampleMicroservice(microservice))
                 .restfulPercentage(getPercentage(countByRestfulTrue , totalCount))
                 .countByMessagingTrue(countByMessagingTrue)
-                .countByMessagingFalse(countByMessagingFalse())
+                .countByMessagingFalse(countByMessagingFalseAndRepoExampleMicroservice(microservice))
                 .messagingPercentage(getPercentage(countByMessagingTrue , totalCount))
                 .countBySoapTrue(countBySoapTrue)
-                .countBySoapFalse(countBySoapFalse())
+                .countBySoapFalse(countBySoapFalseAndRepoExampleMicroservice(microservice))
                 .soapPercentage(getPercentage(countBySoapTrue, totalCount))
                 .countByLogsServiceTrue(countByLogsServiceTrue)
-                .countByLogsServiceFalse(countByLogsServiceFalse())
+                .countByLogsServiceFalse(countByLogsServiceFalseAndRepoExampleMicroservice(microservice))
                 .logsServicePercentage(getPercentage(countByLogsServiceTrue , totalCount))
                 .build();
     }

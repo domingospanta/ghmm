@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
-import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
 import pt.feup.ghmm.metrics.services.RepoExampleMetricsService;
 import pt.feup.ghmm.metrics.services.RepoExampleService;
@@ -80,7 +79,7 @@ public class MetricsController {
     @ResponseBody
     public String startMetricsGeneration(){
         processExecution = repoExampleMetricsService.createProcessExecution();
-        repoExampleMetricsService.generateMetrics(processExecution, repoExampleService.findByProcessedFalse());
+        repoExampleMetricsService.runMetricsExtraction(processExecution, repoExampleService.findByProcessedFalse());
         return "started";
     }
 
@@ -101,8 +100,10 @@ public class MetricsController {
 
     @GetMapping("/statistics")
     public String getMetricsStatisticsPage(Model model){
-        MetricsStatisticsDto metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics();
-        model.addAttribute("metrics", metricsStatisticsDto);
+        MetricsStatisticsDto metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics(true);
+        model.addAttribute("msMetrics", metricsStatisticsDto);
+        metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics(false);
+        model.addAttribute("moMetrics", metricsStatisticsDto);
         return STATISTICS_PAGE;
     }
 }

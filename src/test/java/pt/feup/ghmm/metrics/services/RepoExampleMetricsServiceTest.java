@@ -42,11 +42,11 @@ class RepoExampleMetricsServiceTest {
 
     @Test
     void generateMetrics() throws ExecutionException, InterruptedException {
-        List<RepoExampleMetrics> repoExampleMetrics = repoExampleMetricsService.generateMetrics(null, null).get();
+        List<RepoExampleMetrics> repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(null, null).get();
         assertEquals(repoExampleMetrics.size(), 0);
 
         List<RepoExample> repoExamples = new ArrayList<>();
-        repoExampleMetrics = repoExampleMetricsService.generateMetrics(ProcessExecution.builder().build(), repoExamples).get();
+        repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
         assertEquals(repoExampleMetrics.size(), 0);
 
         RepoExample repoExample = RepoExample.builder()
@@ -56,7 +56,7 @@ class RepoExampleMetricsServiceTest {
                 .build();
         repoExamples.add(repoExample);
 
-        repoExampleMetrics = repoExampleMetricsService.generateMetrics(ProcessExecution.builder()
+        repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(ProcessExecution.builder()
                 .running(true)
                 .processType("Metrics")
                 .build(), repoExamples).get();

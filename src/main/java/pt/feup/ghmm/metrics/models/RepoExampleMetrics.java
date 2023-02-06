@@ -27,6 +27,10 @@ public class RepoExampleMetrics {
     @NotNull(message = "Size (in KB) is mandatory")
     private long size;
 
+    private double sizeWeight;
+
+    private double sizeAggregatedWeight;
+
     @NotNull(message = "DefaultLang flag is mandatory")
     @OneToOne
     private Language defaultLang;
@@ -44,8 +48,16 @@ public class RepoExampleMetrics {
     @NotNull(message = "Number of files in the main language is mandatory")
     private long files;
 
+    private double filesWeight;
+
+    private double filesAggregatedWeight;
+
     @NotNull(message = "Number of all contents (files + folders) is mandatory")
     private long allContentsNumber;
+
+    private double allContentsNumberWeight;
+
+    private double allContentsAggregatedNumberWeight;
 
     @NotNull(message = "MicroserviceMention flag is mandatory")
     private boolean microserviceMention;
