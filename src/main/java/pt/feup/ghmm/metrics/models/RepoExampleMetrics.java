@@ -79,5 +79,4 @@ public class RepoExampleMetrics {
 
     @NotNull(message = "Logs Service flag is mandatory")
     private boolean logsService;
-
 }

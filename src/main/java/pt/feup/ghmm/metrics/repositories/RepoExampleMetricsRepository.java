@@ -15,6 +15,10 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
 
     List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderBySizeAsc(boolean microservice);
 
+    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderByFilesAsc(boolean microservice);
+
+    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderByAllContentsNumberAsc(boolean microservice);
+
     Page<RepoExampleMetrics> findByRepoExampleUrlContainingIgnoreCase(String keyword, Pageable paging);
 
     long countAllByRepoExampleMicroservice(boolean microservice);
@@ -28,10 +32,6 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
     @Query(value = "SELECT avg(files) FROM RepoExampleMetrics")
     long findAverageRepoFiles();
 
-    @Query(value = "SELECT sum(files) FROM RepoExampleMetrics" +
-            " WHERE RepoExampleMetrics.repoExample.microservice =: microservice")
-    long findSumRepoFiles( boolean microservice);
-
     @Query(value = "SELECT max(allContentsNumber) FROM RepoExampleMetrics")
     long findMaxRepoAllContentsNumber();
 
@@ -41,10 +41,6 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
     @Query(value = "SELECT avg(allContentsNumber) FROM RepoExampleMetrics")
     long findAverageRepoAllContentsNumber();
 
-    @Query(value = "SELECT sum(allContentsNumber) FROM RepoExampleMetrics" +
-            " WHERE RepoExampleMetrics.repoExample.microservice =: microservice")
-    long findSumRepoAllContentsNumber(boolean microservice);
-
     @Query(value = "SELECT max(metric.size) FROM RepoExampleMetrics as metric")
     long findMaxSize();
 
@@ -53,10 +49,6 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
 
     @Query(value = "SELECT avg(metric.size) FROM RepoExampleMetrics as metric")
     long findAverageSize();
-
-    @Query(value = "SELECT sum(metric.size) FROM RepoExampleMetrics as metric" +
-            " WHERE RepoExampleMetrics.repoExample.microservice =: microservice")
-    long findSumSize(boolean microservice);
 
     long countByMicroserviceMentionTrueAndRepoExampleMicroservice(boolean microservice);
 

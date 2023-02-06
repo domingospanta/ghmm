@@ -51,6 +51,7 @@ public class RepoExampleMetricsService {
     public CompletableFuture<List<RepoExampleMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<RepoExample> repoExamples){
         if(CollectionUtils.isEmpty(repoExamples)){
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted: nothing to process.", false, false);
+            metricsDerivationService.runMetricsDerivation();
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
         saveProcessExecution(processExecution, repoExamples.size(), 0, "Starting execution.", true, false);
