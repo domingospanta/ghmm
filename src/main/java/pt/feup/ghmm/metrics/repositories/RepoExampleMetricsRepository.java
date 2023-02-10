@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface RepoExampleMetricsRepository extends CrudRepository<RepoExampleMetrics, Long>, PagingAndSortingRepository<RepoExampleMetrics, Long> {
 
+    List<RepoExampleMetrics> findAll();
+
     List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderBySizeAsc(boolean microservice);
 
     List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderByFilesAsc(boolean microservice);

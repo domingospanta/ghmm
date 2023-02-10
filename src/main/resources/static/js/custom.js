@@ -66,8 +66,8 @@ function changePageSize() {
 }
 
 function startMetricsGeneration() {
-  $("#startGeneration").hide();
-  $("#processingGeneration").show();
+  $("#generationButtonSpinner").show();
+  $("#generationButtonLabel").text("Loading...");
 
   metricsGenerationRequest();
 }
@@ -93,8 +93,9 @@ function metricsStatusRequest() {
         function (processExecution) {
           console.log("status data:" + processExecution);
           if(!!processExecution && processExecution.running === false){
-            $("#startGeneration").show();
-            $("#processingGeneration").hide();
+            $("#generationButton").attr('value', "Start");
+            $("#generationButtonSpinner").hide();
+            $("#generationButtonLabel").text("Start");
             clearInterval(timer);
             if(processExecution.error === true){
               $("#processResultDiv").removeClass("alert-success");
@@ -106,7 +107,9 @@ function metricsStatusRequest() {
             $("#processResultMessage").text(processExecution.message);
             $("#processResultDiv").show();
           } else {
-            $("#unprocessedMetrics").text(processExecution.processedItems + "/" + processExecution.totalItems)
+            $("#unprocessedMetrics").text(processExecution.processedItems + "/" + processExecution.totalItems);
+            let bar = document.querySelector(".progress-bar");
+            bar.style.width = ((processExecution.processedItems/processExecution.totalItems) * 100) + "%";
           }
         }
   });

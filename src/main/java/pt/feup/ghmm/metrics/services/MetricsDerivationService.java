@@ -1,12 +1,12 @@
 package pt.feup.ghmm.metrics.services;
 
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
 import pt.feup.ghmm.metrics.models.Threshold;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
+import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
 
 import java.util.*;
 
@@ -18,6 +18,8 @@ public class MetricsDerivationService {
 
     private ThresholdService thresholdService;
 
+    private RepoExampleRepository repoExampleRepository;
+
     private final String SIZE = "size";
     private final String FILES = "files";
     private final String ALL_CONTENTS = "allContents";
@@ -25,6 +27,7 @@ public class MetricsDerivationService {
     public void runMetricsDerivation() {
         runMetricsDerivation(true);
         runMetricsDerivation(false);
+        calculateRepoMetricsScores();
     }
 
     private void runMetricsDerivation(boolean microservice) {
@@ -94,17 +97,17 @@ public class MetricsDerivationService {
             switch (attribute) {
                 case SIZE -> {
                     if(isLowRiskClassification(metric.getSizeAggregatedWeight())){
-                        threshold.setThresholdValue(metric.getSizeAggregatedWeight());
+                        threshold.setThresholdValue(metric.getSize());
                     }
                 }
                 case FILES -> {
                     if(isLowRiskClassification(metric.getFilesAggregatedWeight())){
-                        threshold.setThresholdValue(metric.getFilesAggregatedWeight());
+                        threshold.setThresholdValue(metric.getFiles());
                     }
                 }
                 case ALL_CONTENTS -> {
                     if(isLowRiskClassification(metric.getAllContentsAggregatedNumberWeight())){
-                        threshold.setThresholdValue(metric.getAllContentsAggregatedNumberWeight());
+                        threshold.setThresholdValue(metric.getAllContentsNumber());
                     }
                 }
             }
@@ -115,5 +118,45 @@ public class MetricsDerivationService {
     private boolean isLowRiskClassification(double value) {
         float MAX_LOW_RISK_CLASSIFICATION = 0.7f;
         return value  < MAX_LOW_RISK_CLASSIFICATION;
+    }
+
+    private void calculateRepoMetricsScores() {
+        List<RepoExampleMetrics> repoExampleMetricsList = repository.findAll();
+        for(RepoExampleMetrics repoExampleMetrics: repoExampleMetricsList){
+            RepoExample repoExample = repoExampleMetrics.getRepoExample();
+            double score = calculateScore(repoExampleMetrics);
+            repoExample.setScore(score);
+            if(score <= 4.0){
+                repoExample.setClassification("MONOLITH");
+            } else if (score >= 6.0){
+                repoExample.setClassification("MICROSERVICE");
+            } else {
+                repoExample.setClassification("UNKNOWN");
+            }
+            repoExampleRepository.save(repoExample);
+        }
+    }
+
+    private double calculateScore(RepoExampleMetrics repoExampleMetrics) {
+        double score = 0;
+        score += getNumericalScore(repoExampleMetrics.getSize(), thresholdService.findByMetric(SIZE).getThresholdValue());
+        score += getNumericalScore(repoExampleMetrics.getFiles(), thresholdService.findByMetric(FILES).getThresholdValue());
+        score += getNumericalScore(repoExampleMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS).getThresholdValue());
+        score += getBooleanScore(repoExampleMetrics.isDockerfile());
+        score += getBooleanScore(repoExampleMetrics.isLogsService());
+        score += getBooleanScore(repoExampleMetrics.isDatabaseConnection());
+        score += getBooleanScore(repoExampleMetrics.isMessaging());
+        score += getBooleanScore(repoExampleMetrics.isRestful());
+        score += getBooleanScore(repoExampleMetrics.isMicroserviceMention());
+        score += getBooleanScore(!repoExampleMetrics.isSoap());
+        return score;
+    }
+
+    private double getBooleanScore(boolean metric) {
+        return metric ? 1 : 0;
+    }
+
+    private double getNumericalScore(long metric, double thresholdValue) {
+        return metric <= thresholdValue ? 1 : 0;
     }
 }

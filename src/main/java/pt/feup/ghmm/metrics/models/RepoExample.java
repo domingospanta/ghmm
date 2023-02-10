@@ -40,4 +40,8 @@ public class RepoExample {
     private boolean processingError;
 
     private String message;
+
+    private double score;
+
+    private String classification;
 }

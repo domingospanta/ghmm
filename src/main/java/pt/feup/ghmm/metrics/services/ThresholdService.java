@@ -27,6 +27,10 @@ public class ThresholdService {
         return threshold;
     }
 
+    public Threshold findByMetric(String metric){
+        return repository.findByMetricAndMicroservice(metric, true);
+    }
+
     public void update(Threshold threshold){
         repository.save(threshold);
     }

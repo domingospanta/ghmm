@@ -106,4 +106,6 @@ public class MetricsController {
         model.addAttribute("moMetrics", metricsStatisticsDto);
         return STATISTICS_PAGE;
     }
+
+
 }
