@@ -2,9 +2,7 @@ package pt.feup.ghmm.metrics.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import pt.feup.ghmm.metrics.models.Language;
 import pt.feup.ghmm.metrics.models.Threshold;
-import pt.feup.ghmm.metrics.repositories.LanguageRepository;
 import pt.feup.ghmm.metrics.repositories.ThresholdRepository;
 
 @AllArgsConstructor

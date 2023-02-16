@@ -126,12 +126,10 @@ public class MetricsDerivationService {
             RepoExample repoExample = repoExampleMetrics.getRepoExample();
             double score = calculateScore(repoExampleMetrics);
             repoExample.setScore(score);
-            if(score <= 4.0){
-                repoExample.setClassification("MONOLITH");
-            } else if (score >= 6.0){
+            if (score >= 7.0){
                 repoExample.setClassification("MICROSERVICE");
             } else {
-                repoExample.setClassification("UNKNOWN");
+                repoExample.setClassification("MONOLITH");
             }
             repoExampleRepository.save(repoExample);
         }
