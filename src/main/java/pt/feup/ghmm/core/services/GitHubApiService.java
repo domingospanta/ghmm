@@ -7,14 +7,12 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.util.StringUtils;
 import pt.feup.ghmm.core.dtos.AllContentDto;
 import pt.feup.ghmm.core.dtos.ContentDto;
 import pt.feup.ghmm.core.dtos.MainRepositoryDto;
 import pt.feup.ghmm.core.dtos.SearchResultDto;
-import pt.feup.ghmm.metrics.services.RepoExampleMetricsService;
 
 import java.util.HashMap;
 
