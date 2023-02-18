@@ -126,7 +126,7 @@ public class MetricsDerivationService {
             RepoExample repoExample = repoExampleMetrics.getRepoExample();
             double score = calculateScore(repoExampleMetrics);
             repoExample.setScore(score);
-            if (score >= 7.0){
+            if (score >= 6.0){
                 repoExample.setClassification("MICROSERVICE");
             } else {
                 repoExample.setClassification("MONOLITH");
@@ -151,10 +151,10 @@ public class MetricsDerivationService {
     }
 
     private double getBooleanScore(boolean metric) {
-        return metric ? 1 : 0;
+        return metric ? 1 : -1;
     }
 
     private double getNumericalScore(long metric, double thresholdValue) {
-        return metric <= thresholdValue ? 1 : 0;
+        return metric <= thresholdValue ? 1 : -1;
     }
 }

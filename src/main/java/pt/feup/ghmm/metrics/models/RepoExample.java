@@ -35,6 +35,9 @@ public class RepoExample {
     @NotNull(message = "Microservice flag is mandatory")
     private boolean microservice;
 
+    @NotNull(message = "Microservice flag is mandatory")
+    private boolean microserviceSet;
+
     private boolean processed;
 
     private boolean processingError;

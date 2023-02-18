@@ -1,27 +1,23 @@
 package pt.feup.ghmm.metrics.services;
 
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionSystemException;
-import org.springframework.web.multipart.MultipartFile;
-import pt.feup.ghmm.core.utils.CSVHelper;
-import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
-import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.Language;
-import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.repositories.LanguageRepository;
-import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor
 @Service
 public class LanguageService {
-    private LanguageRepository repository;
+
+    private final LanguageRepository repository;
+
+    private final List<String> programmingLanguages;
+
+    public LanguageService(LanguageRepository repository, @Value("${programming.languages}") String programmingLanguages) {
+        this.repository = repository;
+        this.programmingLanguages = List.of(programmingLanguages.split(","));
+    }
 
     public Language findOrCreateByName(String name) {
         if(name == null){
@@ -32,6 +28,7 @@ public class LanguageService {
 
         language = Language.builder()
                     .name(name)
+                    .programmingLanguage(programmingLanguages.contains(name))
                     .build();
         repository.save(language);
 

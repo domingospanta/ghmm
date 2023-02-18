@@ -10,8 +10,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -25,5 +23,8 @@ public class Language {
 
     @NotBlank(message = "Name is mandatory")
     private String name;
+
+    @NotBlank(message = "Programming language flag is mandatory")
+    private boolean programmingLanguage;
 
 }

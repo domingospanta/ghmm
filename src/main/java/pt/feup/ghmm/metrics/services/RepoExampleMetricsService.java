@@ -105,6 +105,216 @@ public class RepoExampleMetricsService {
         return processExecution;
     }
 
+    private RepoExampleMetrics fetchMetrics(RepoExample repoExample) throws HttpClientErrorException.Forbidden{
+        try {
+            MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
+            if(mainRepositoryDto == null) return null;
+            repoExample = repoExampleService.update(repoExample, mainRepositoryDto);
+
+            return RepoExampleMetrics.builder()
+                    .repoExample(repoExample)
+                    .size(mainRepositoryDto.getSize())
+                    .defaultBranch(mainRepositoryDto.getDefaultBranch())
+                    .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
+                    .languages(getLanguages(repoExample))
+                    .files(getFilesCount(repoExample, mainRepositoryDto.getDefaultBranch()))
+                    .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
+                    .microserviceMention(hasMicroserviceMention(repoExample))
+                    .databaseConnection(hasDatabaseConnection(repoExample))
+                    .dockerfile(hasDockerfile(repoExample))
+                    .restful(hasRestful(repoExample))
+                    .soap(hasSoap(repoExample, mainRepositoryDto.getLanguage()))
+                    .messaging(hasMessaging(repoExample))
+                    .logsService(hasLogsService(repoExample))
+                    .build();
+        } catch (HttpClientErrorException.Forbidden exception){
+            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
+            throw exception;
+        } catch (HttpClientErrorException.NotFound exception){
+            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
+            repoExample.setProcessingError(true);
+            repoExample.setProcessed(true);
+            repoExample.setMessage(exception.getMessage());
+            repoExampleService.save(repoExample);
+        }
+        catch (Exception exception){
+            logger.error("Error processing repo: " + repoExample.getUrl());
+        }
+        return null;
+    }
+
+    private Set<Language> getLanguages(RepoExample repoExample) {
+        HashMap<String, Integer> map = gitHubApiService.getLanguagesData(repoExample.getOwner(), repoExample.getName());
+        return getLanguageListFromMap(map);
+    }
+
+    private Set<Language> getLanguageListFromMap(HashMap<String, Integer> map) {
+        Set<Language> languages = new HashSet<>();
+        for(String language: map.keySet()){
+            languages.add(languageService.findOrCreateByName(language));
+        }
+        return languages;
+    }
+
+    private Language getOrCreateLanguage(String lang) {
+        return languageService.findOrCreateByName(lang);
+    }
+
+    private long getFilesCount(RepoExample repoExample, String defaultBranch) {
+        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
+        int filesCount = 0;
+        final String FILES_TYPE = "blob";
+        if(!CollectionUtils.isEmpty(allContentDto.getTree())){
+            for(ContentDto contentDto: allContentDto.getTree()){
+                if(FILES_TYPE.equals(contentDto.getType())){
+                    filesCount++;
+                }
+            }
+        }
+        return filesCount;
+    }
+
+    private long getContentsNumber(RepoExample repoExample, String defaultBranch) {
+        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
+        return allContentDto != null && !CollectionUtils.isEmpty(allContentDto.getTree()) ? allContentDto.getTree().size() : 0;
+    }
+
+    private boolean hasMicroserviceMention(RepoExample repoExample) {
+        List<String> queryFragments = Arrays.asList("microservice", "micro-service");
+        for(String queryFragment: queryFragments){
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(searchResultDto.getTotalCount() > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasDatabaseConnection(RepoExample repoExample) {
+        List<String> queryFragments = Arrays.asList("database", "language:sql", "oracle", "mysql", "SQL Server", "SQLite",
+                "postgres", "cassandra", "mongodb");
+        for(String queryFragment: queryFragments){
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(searchResultDto.getTotalCount() > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasDockerfile(RepoExample repoExample) {
+        List<String> queryFragments = Arrays.asList("language:Dockerfile","docker-compose", "docker");
+        for(String queryFragment: queryFragments){
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(searchResultDto.getTotalCount() > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasRestful(RepoExample repoExample) {
+        List<String> queryFragments = Arrays.asList("http","https");
+        for(String queryFragment: queryFragments){
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(searchResultDto.getTotalCount() > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasSoap(RepoExample repoExample, String lang) {
+        String queryFragment = "soap+language:" + lang;
+        SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+        return searchResultDto != null && searchResultDto.getTotalCount() > 0;
+    }
+
+    private boolean hasMessaging(RepoExample repoExample) {
+        List<String> queryFragments = Arrays.asList("kafka", "RabbitMQ" + "producer", "consumer", "amqp");
+        for(String queryFragment: queryFragments){
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(searchResultDto.getTotalCount() > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasLogsService(RepoExample repoExample) {
+        List<String> queryFragments = Arrays.asList("logstash", "Datadog", "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Fluentd");
+        for(String queryFragment: queryFragments){
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(searchResultDto.getTotalCount() > 0){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public ProcessExecution getProcessExecutionById(Long id) {
+        Optional<ProcessExecution> processExecution = processExecutionRepository.findById(id);
+        return processExecution.orElse(null);
+    }
+
+    public Page<RepoExampleMetrics> findByRepoExamples(String keyword, Pageable paging) {
+        return repository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
+    }
+
+    public long countAllByMicroservice(boolean microservice) {
+        return repository.countAllByRepoExampleMicroservice(microservice);
+    }
+
+    public MetricsStatisticsDto getMetricsStatistics(boolean microservice) {
+        float totalCount = countAllByMicroservice(microservice);
+        if(totalCount == 0) return MetricsStatisticsDto.builder().build();
+        long countByMicroserviceMentionTrue = countByMicroserviceMentionTrueAndRepoExampleMicroservice(microservice);
+        long countByDatabaseConnectionTrue = countByDatabaseConnectionTrueAndRepoExampleMicroservice(microservice);
+        long countByDockerfileTrue = countByDockerfileTrueAndRepoExampleMicroservice(microservice);
+        long countByRestfulTrue = countByRestfulTrueAndRepoExampleMicroservice(microservice);
+        long countByMessagingTrue = countByMessagingTrueAndRepoExampleMicroservice(microservice);
+        long countBySoapTrue = countBySoapTrueAndRepoExampleMicroservice(microservice);
+        long countByLogsServiceTrue = countByLogsServiceTrueAndRepoExampleMicroservice(microservice);
+        return MetricsStatisticsDto.builder()
+                .totalMetrics((long) totalCount)
+                .maxRepoFiles(findMaxRepoFiles())
+                .minRepoFiles(findMinRepoFiles())
+                .averageRepoFiles(findAverageRepoFiles())
+                .maxRepoAllContentsNumber(findMaxRepoAllContentsNumber())
+                .minRepoAllContentsNumber(findMinRepoAllContentsNumber())
+                .averageRepoAllContentsNumber(findAverageRepoAllContentsNumber())
+                .maxSize(findMaxSize())
+                .minSize(findMinSize())
+                .averageSize(findAverageSize())
+                .countByMicroserviceMentionTrue(countByMicroserviceMentionTrue)
+                .countByMicroserviceMentionFalse(countByMicroserviceMentionFalseAndRepoExampleMicroservice(microservice))
+                .microserviceMentionPercentage(getPercentage(countByMicroserviceMentionTrue, totalCount))
+                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue)
+                .countByDatabaseConnectionFalse(countByDatabaseConnectionFalseAndRepoExampleMicroservice(microservice))
+                .databaseConnectionPercentage(getPercentage(countByDatabaseConnectionTrue, totalCount))
+                .countByDockerfileTrue(countByDockerfileTrue)
+                .countByDockerfileFalse(countByDockerfileFalseAndRepoExampleMicroservice(microservice))
+                .dockerfilePercentage(getPercentage(countByDockerfileTrue, totalCount))
+                .countByRestfulTrue(countByRestfulTrue)
+                .countByRestfulFalse(countByRestfulFalseAndRepoExampleMicroservice(microservice))
+                .restfulPercentage(getPercentage(countByRestfulTrue , totalCount))
+                .countByMessagingTrue(countByMessagingTrue)
+                .countByMessagingFalse(countByMessagingFalseAndRepoExampleMicroservice(microservice))
+                .messagingPercentage(getPercentage(countByMessagingTrue , totalCount))
+                .countBySoapTrue(countBySoapTrue)
+                .countBySoapFalse(countBySoapFalseAndRepoExampleMicroservice(microservice))
+                .soapPercentage(getPercentage(countBySoapTrue, totalCount))
+                .countByLogsServiceTrue(countByLogsServiceTrue)
+                .countByLogsServiceFalse(countByLogsServiceFalseAndRepoExampleMicroservice(microservice))
+                .logsServicePercentage(getPercentage(countByLogsServiceTrue , totalCount))
+                .build();
+    }
+
+    private float getPercentage(long numerator, float denominator) {
+        return Math.round((numerator / denominator) * 100);
+    }
+
+
     public long findMaxRepoFiles(){
         return repository.findMaxRepoFiles();
     }
@@ -195,209 +405,5 @@ public class RepoExampleMetricsService {
 
     public long countByLogsServiceFalseAndRepoExampleMicroservice(boolean microservice){
         return repository.countByLogsServiceFalseAndRepoExampleMicroservice(microservice);
-    }
-
-    private RepoExampleMetrics fetchMetrics(RepoExample repoExample) throws HttpClientErrorException.Forbidden{
-        try {
-            MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
-            if(mainRepositoryDto == null) return null;
-            repoExample = repoExampleService.update(repoExample, mainRepositoryDto);
-
-            return RepoExampleMetrics.builder()
-                    .repoExample(repoExample)
-                    .size(mainRepositoryDto.getSize())
-                    .defaultBranch(mainRepositoryDto.getDefaultBranch())
-                    .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
-                    .languages(getLanguages(repoExample))
-                    .files(getFilesCount(repoExample, mainRepositoryDto.getDefaultBranch()))
-                    .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
-                    .microserviceMention(hasMicroserviceMention(repoExample))
-                    .databaseConnection(hasDatabaseConnection(repoExample))
-                    .dockerfile(hasDockerfile(repoExample))
-                    .restful(hasRestful(repoExample, mainRepositoryDto.getLanguage()))
-                    .soap(hasSoap(repoExample, mainRepositoryDto.getLanguage()))
-                    .messaging(hasMessaging(repoExample))
-                    .logsService(hasLogsService(repoExample))
-                    .build();
-        } catch (HttpClientErrorException.Forbidden exception){
-            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
-            throw exception;
-        } catch (HttpClientErrorException.NotFound exception){
-            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
-            repoExample.setProcessingError(true);
-            repoExample.setProcessed(true);
-            repoExample.setMessage(exception.getMessage());
-            repoExampleService.save(repoExample);
-        }
-        catch (Exception exception){
-            logger.error("Error processing repo: " + repoExample.getUrl());
-        }
-        return null;
-    }
-
-    private Set<Language> getLanguages(RepoExample repoExample) {
-        HashMap<String, Integer> map = gitHubApiService.getLanguagesData(repoExample.getOwner(), repoExample.getName());
-        return getLanguageListFromMap(map);
-    }
-
-    private Set<Language> getLanguageListFromMap(HashMap<String, Integer> map) {
-        Set<Language> languages = new HashSet<>();
-        for(String language: map.keySet()){
-            languages.add(languageService.findOrCreateByName(language));
-        }
-        return languages;
-    }
-
-    private Language getOrCreateLanguage(String lang) {
-        return languageService.findOrCreateByName(lang);
-    }
-
-    private long getFilesCount(RepoExample repoExample, String defaultBranch) {
-        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
-        int filesCount = 0;
-        final String FILES_TYPE = "blob";
-        if(!CollectionUtils.isEmpty(allContentDto.getTree())){
-            for(ContentDto contentDto: allContentDto.getTree()){
-                if(FILES_TYPE.equals(contentDto.getType())){
-                    filesCount++;
-                }
-            }
-        }
-        return filesCount;
-    }
-
-    private long getContentsNumber(RepoExample repoExample, String defaultBranch) {
-        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
-        return allContentDto != null && !CollectionUtils.isEmpty(allContentDto.getTree()) ? allContentDto.getTree().size() : 0;
-    }
-
-    private boolean hasMicroserviceMention(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("microservice", "micro-service");
-        for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            if(searchResultDto.getTotalCount() > 0){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasDatabaseConnection(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("database", "language:sql", "oracle", "mysql", "SQL Server", "SQLite",
-                "postgres", "cassandra", "mongodb");
-        for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            if(searchResultDto.getTotalCount() > 0){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasDockerfile(RepoExample repoExample) {
-        String queryFragment = "language:Dockerfile";
-        SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-        return searchResultDto != null && searchResultDto.getTotalCount() > 0;
-    }
-
-    private boolean hasRestful(RepoExample repoExample, String lang) {
-        List<String> queryFragments = Arrays.asList("http+language:" + lang, "https+language:" + lang);
-        for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            if(searchResultDto.getTotalCount() > 0){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasSoap(RepoExample repoExample, String lang) {
-        String queryFragment = "soap+language:" + lang;
-        SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-        return searchResultDto != null && searchResultDto.getTotalCount() > 0;
-    }
-
-    private boolean hasMessaging(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("kafka", "RabbitMQ" + "producer", "consumer");
-        for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            if(searchResultDto.getTotalCount() > 0){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean hasLogsService(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("logstash", "Datadog", "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Fluentd");
-        for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            if(searchResultDto.getTotalCount() > 0){
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public ProcessExecution getProcessExecutionById(Long id) {
-        Optional<ProcessExecution> processExecution = processExecutionRepository.findById(id);
-        return processExecution.orElse(null);
-    }
-
-    public Page<RepoExampleMetrics> findByRepoExamples(String keyword, Pageable paging) {
-        return repository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
-    }
-
-    public long countAllByMicroservice(boolean microservice) {
-        return repository.countAllByRepoExampleMicroservice(microservice);
-    }
-
-    public MetricsStatisticsDto getMetricsStatistics(boolean microservice) {
-        float totalCount = countAllByMicroservice(microservice);
-        if(totalCount == 0) return MetricsStatisticsDto.builder().build();
-        long countByMicroserviceMentionTrue = countByMicroserviceMentionTrueAndRepoExampleMicroservice(microservice);
-        long countByDatabaseConnectionTrue = countByDatabaseConnectionTrueAndRepoExampleMicroservice(microservice);
-        long countByDockerfileTrue = countByDockerfileTrueAndRepoExampleMicroservice(microservice);
-        long countByRestfulTrue = countByRestfulTrueAndRepoExampleMicroservice(microservice);
-        long countByMessagingTrue = countByMessagingTrueAndRepoExampleMicroservice(microservice);
-        long countBySoapTrue = countBySoapTrueAndRepoExampleMicroservice(microservice);
-        long countByLogsServiceTrue = countByLogsServiceTrueAndRepoExampleMicroservice(microservice);
-        return MetricsStatisticsDto.builder()
-                .totalMetrics((long) totalCount)
-                .maxRepoFiles(findMaxRepoFiles())
-                .minRepoFiles(findMinRepoFiles())
-                .averageRepoFiles(findAverageRepoFiles())
-                .maxRepoAllContentsNumber(findMaxRepoAllContentsNumber())
-                .minRepoAllContentsNumber(findMinRepoAllContentsNumber())
-                .averageRepoAllContentsNumber(findAverageRepoAllContentsNumber())
-                .maxSize(findMaxSize())
-                .minSize(findMinSize())
-                .averageSize(findAverageSize())
-                .countByMicroserviceMentionTrue(countByMicroserviceMentionTrue)
-                .countByMicroserviceMentionFalse(countByMicroserviceMentionFalseAndRepoExampleMicroservice(microservice))
-                .microserviceMentionPercentage(getPercentage(countByMicroserviceMentionTrue, totalCount))
-                .countByDatabaseConnectionTrue(countByDatabaseConnectionTrue)
-                .countByDatabaseConnectionFalse(countByDatabaseConnectionFalseAndRepoExampleMicroservice(microservice))
-                .databaseConnectionPercentage(getPercentage(countByDatabaseConnectionTrue, totalCount))
-                .countByDockerfileTrue(countByDockerfileTrue)
-                .countByDockerfileFalse(countByDockerfileFalseAndRepoExampleMicroservice(microservice))
-                .dockerfilePercentage(getPercentage(countByDockerfileTrue, totalCount))
-                .countByRestfulTrue(countByRestfulTrue)
-                .countByRestfulFalse(countByRestfulFalseAndRepoExampleMicroservice(microservice))
-                .restfulPercentage(getPercentage(countByRestfulTrue , totalCount))
-                .countByMessagingTrue(countByMessagingTrue)
-                .countByMessagingFalse(countByMessagingFalseAndRepoExampleMicroservice(microservice))
-                .messagingPercentage(getPercentage(countByMessagingTrue , totalCount))
-                .countBySoapTrue(countBySoapTrue)
-                .countBySoapFalse(countBySoapFalseAndRepoExampleMicroservice(microservice))
-                .soapPercentage(getPercentage(countBySoapTrue, totalCount))
-                .countByLogsServiceTrue(countByLogsServiceTrue)
-                .countByLogsServiceFalse(countByLogsServiceFalseAndRepoExampleMicroservice(microservice))
-                .logsServicePercentage(getPercentage(countByLogsServiceTrue , totalCount))
-                .build();
-    }
-
-    private float getPercentage(long numerator, float denominator) {
-        return Math.round((numerator / denominator) * 100);
     }
 }
