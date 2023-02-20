@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+import static jakarta.persistence.FetchType.EAGER;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -35,12 +37,19 @@ public class RepoExampleMetrics {
     @OneToOne
     private Language defaultLang;
 
-    @ManyToMany
+    @ManyToMany(fetch = EAGER)
     @JoinTable(
             name = "repo_metrics_languages",
             joinColumns = @JoinColumn(name = "repo_metrics_id"),
             inverseJoinColumns = @JoinColumn(name = "language_id"))
     private Set<Language> languages;
+
+    @ManyToMany(fetch = EAGER)
+    @JoinTable(
+            name = "repo_metrics_services",
+            joinColumns = @JoinColumn(name = "repo_metrics_id"),
+            inverseJoinColumns = @JoinColumn(name = "service_id"))
+    private Set<Service> services;
 
     @NotNull(message = "Number of files in the main language is mandatory")
     private String defaultBranch;
@@ -58,6 +67,21 @@ public class RepoExampleMetrics {
     private double allContentsNumberWeight;
 
     private double allContentsAggregatedNumberWeight;
+
+    @NotNull(message = "DatabaseServices count is mandatory")
+    private long databaseServices;
+
+    @NotNull(message = "LogServices count is mandatory")
+    private long logServices;
+
+    @NotNull(message = "MessagingServices count is mandatory")
+    private long messagingServices;
+
+    @NotNull(message = "Dockerfiles count is mandatory")
+    private long dockerfiles;
+
+    @NotNull(message = "Programming languages count is mandatory")
+    private long programmingLanguages;
 
     @NotNull(message = "MicroserviceMention flag is mandatory")
     private boolean microserviceMention;

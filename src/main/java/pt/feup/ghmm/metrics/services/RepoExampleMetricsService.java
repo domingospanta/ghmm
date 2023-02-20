@@ -9,12 +9,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
-import pt.feup.ghmm.core.dtos.AllContentDto;
-import pt.feup.ghmm.core.dtos.ContentDto;
-import pt.feup.ghmm.core.dtos.MainRepositoryDto;
-import pt.feup.ghmm.core.dtos.SearchResultDto;
+import org.thymeleaf.util.MapUtils;
+import pt.feup.ghmm.core.dtos.*;
 import pt.feup.ghmm.core.services.GitHubApiService;
 import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
+import pt.feup.ghmm.metrics.enums.ServiceType;
 import pt.feup.ghmm.metrics.models.Language;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
@@ -37,6 +36,8 @@ public class RepoExampleMetricsService {
 
     private LanguageService languageService;
 
+    private ServiceService serviceService;
+
     private GitHubApiService gitHubApiService;
 
     private RepoExampleService repoExampleService;
@@ -51,6 +52,7 @@ public class RepoExampleMetricsService {
     public CompletableFuture<List<RepoExampleMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<RepoExample> repoExamples){
         if(CollectionUtils.isEmpty(repoExamples)){
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted: nothing to process.", false, false);
+            computeServicesCount();
             metricsDerivationService.runMetricsDerivation();
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
@@ -69,6 +71,24 @@ public class RepoExampleMetricsService {
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted due to Git Rest API client error.", false, true);
         }
         return CompletableFuture.completedFuture(metrics);
+    }
+
+
+    private void computeServicesCount() {
+        List<RepoExampleMetrics> repoExampleMetricsList = repository.findAll();
+        for(RepoExampleMetrics repoExampleMetrics: repoExampleMetricsList){
+            Set<pt.feup.ghmm.metrics.models.Service> services = repoExampleMetrics.getServices();
+            services = serviceService.updateType(services);
+            long programmingLanguagesCount = getProgrammingLanguagesCount(repoExampleMetrics.getLanguages());
+            long databaseServices = getDatabaseServices(services, repoExampleMetrics.isDatabaseConnection());
+            long messagingServices = getMessagingServices(services, repoExampleMetrics.isMessaging());
+            long logServices = getLogsServices(services, repoExampleMetrics.isLogsService());
+            repoExampleMetrics.setProgrammingLanguages(programmingLanguagesCount);
+            repoExampleMetrics.setDatabaseServices(databaseServices);
+            repoExampleMetrics.setMessagingServices(messagingServices);
+            repoExampleMetrics.setLogServices(logServices);
+            repository.save(repoExampleMetrics);
+        }
     }
 
     private void saveStatusRepoExampleMetrics(RepoExampleMetrics repoMetrics, List<RepoExampleMetrics> metrics, RepoExample repoExample) {
@@ -110,22 +130,38 @@ public class RepoExampleMetricsService {
             MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
             if(mainRepositoryDto == null) return null;
             repoExample = repoExampleService.update(repoExample, mainRepositoryDto);
+            Set<Language> languages = getLanguages(repoExample);
+            long programmingLanguagesCount = getProgrammingLanguagesCount(languages);
+            long dockerfiles = getDockerfiles(repoExample);
+            boolean databaseConnection = hasDatabaseConnection(repoExample);
+            Set<pt.feup.ghmm.metrics.models.Service> services = getServices(repoExample);
+            long databaseServices = getDatabaseServices(services, databaseConnection);
+            boolean messaging = hasMessaging(repoExample);
+            long messagingServices = getMessagingServices(services, messaging);
+            boolean logs = hasLogsService(repoExample);
+            long logServices = getLogsServices(services, logs);
 
             return RepoExampleMetrics.builder()
                     .repoExample(repoExample)
                     .size(mainRepositoryDto.getSize())
                     .defaultBranch(mainRepositoryDto.getDefaultBranch())
                     .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
-                    .languages(getLanguages(repoExample))
+                    .languages(languages)
+                    .programmingLanguages(programmingLanguagesCount)
                     .files(getFilesCount(repoExample, mainRepositoryDto.getDefaultBranch()))
                     .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
                     .microserviceMention(hasMicroserviceMention(repoExample))
-                    .databaseConnection(hasDatabaseConnection(repoExample))
-                    .dockerfile(hasDockerfile(repoExample))
+                    .databaseConnection(databaseConnection)
+                    .databaseServices(databaseServices)
+                    .dockerfile(isGreaterThanZero(dockerfiles))
+                    .dockerfiles(dockerfiles)
                     .restful(hasRestful(repoExample))
                     .soap(hasSoap(repoExample, mainRepositoryDto.getLanguage()))
-                    .messaging(hasMessaging(repoExample))
-                    .logsService(hasLogsService(repoExample))
+                    .messaging(messaging)
+                    .messagingServices(messagingServices)
+                    .logsService(logs)
+                    .logServices(logServices)
+                    .services(services)
                     .build();
         } catch (HttpClientErrorException.Forbidden exception){
             logger.error("Error processing repo: " + repoExample.getUrl(), exception);
@@ -143,9 +179,57 @@ public class RepoExampleMetricsService {
         return null;
     }
 
+    private long getDatabaseServices(Set<pt.feup.ghmm.metrics.models.Service> services, boolean databaseConnection) {
+        if(CollectionUtils.isEmpty(services)) return databaseConnection ? 1 : 0;
+        return services.stream().filter(service -> ServiceType.DATABASE.equals(service.getServiceType())).count();
+    }
+
+    private long getMessagingServices(Set<pt.feup.ghmm.metrics.models.Service> services, boolean messaging) {
+        if(CollectionUtils.isEmpty(services)) return messaging ? 1 : 0;
+        return services.stream().filter(service -> ServiceType.MESSAGING.equals(service.getServiceType())).count();
+    }
+
+    private long getLogsServices(Set<pt.feup.ghmm.metrics.models.Service> services, boolean logs) {
+        if(CollectionUtils.isEmpty(services)) return logs ? 1 : 0;
+        return services.stream().filter(service -> ServiceType.LOGS.equals(service.getServiceType())).count();
+    }
+
+    private Set<pt.feup.ghmm.metrics.models.Service> getServices(RepoExample repoExample) {
+        Map<String, ServiceDto> allServices = getAllServices(repoExample);
+        return getServiceListFromMap(allServices);
+    }
+
+    private Map<String, ServiceDto> getAllServices(RepoExample repoExample) {
+        String queryFragment = "services:+language:YAML";
+        SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+        Map<String, ServiceDto> allServices = new HashMap<>();
+        for(ItemDto itemDto: searchResultDto.getItems()){
+            if(itemDto.getPath().contains("{")) continue;
+            DockerComposeDto dockerComposeDto = gitHubApiService.getDockerComposeFileContent(repoExample.getOwner(), repoExample.getName(), itemDto.getPath());
+            if(dockerComposeDto != null && !MapUtils.isEmpty(dockerComposeDto.getServices())){
+                allServices.putAll(dockerComposeDto.getServices());
+            }
+        }
+        return allServices;
+    }
+
     private Set<Language> getLanguages(RepoExample repoExample) {
         HashMap<String, Integer> map = gitHubApiService.getLanguagesData(repoExample.getOwner(), repoExample.getName());
         return getLanguageListFromMap(map);
+    }
+
+    private long getProgrammingLanguagesCount(Set<Language> languages) {
+        if(CollectionUtils.isEmpty(languages)) return 0;
+        return languages.stream().filter(Language::isProgrammingLanguage).count();
+    }
+
+    private Set<pt.feup.ghmm.metrics.models.Service> getServiceListFromMap(Map<String, ServiceDto> map) {
+        Set<pt.feup.ghmm.metrics.models.Service> services = new HashSet<>();
+        for(Map.Entry<String, ServiceDto> entry: map.entrySet()){
+            pt.feup.ghmm.metrics.models.Service service = serviceService.findOrCreateByName(entry.getKey(), entry.getValue().getImage());
+            services.add(service);
+        }
+        return services;
     }
 
     private Set<Language> getLanguageListFromMap(HashMap<String, Integer> map) {
@@ -202,15 +286,17 @@ public class RepoExampleMetricsService {
         return false;
     }
 
-    private boolean hasDockerfile(RepoExample repoExample) {
+    private long getDockerfiles(RepoExample repoExample) {
         List<String> queryFragments = Arrays.asList("language:Dockerfile","docker-compose", "docker");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            if(searchResultDto.getTotalCount() > 0){
-                return true;
-            }
+            return searchResultDto.getTotalCount();
         }
-        return false;
+        return 0;
+    }
+
+    private boolean isGreaterThanZero(long totalCount) {
+        return totalCount > 0;
     }
 
     private boolean hasRestful(RepoExample repoExample) {

@@ -4,17 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.util.StringUtils;
-import pt.feup.ghmm.core.dtos.AllContentDto;
-import pt.feup.ghmm.core.dtos.ContentDto;
-import pt.feup.ghmm.core.dtos.MainRepositoryDto;
-import pt.feup.ghmm.core.dtos.SearchResultDto;
+import pt.feup.ghmm.core.dtos.*;
+import pt.feup.ghmm.core.utils.YAMLHelper;
 
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 public class GitHubApiService {
@@ -31,7 +32,7 @@ public class GitHubApiService {
   public GitHubApiService(@Value("${github.api.user}") String user,
                           @Value("${github.api.password}") String password,
                           @Value("${github.api.url}") String url,
-                          RestTemplateBuilder restTemplateBuilder) {
+                          @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") RestTemplateBuilder restTemplateBuilder) {
     this.restTemplate = restTemplateBuilder.basicAuthentication(user, password).build();
     END_POINT = url;
     requestCount = 0;
@@ -75,6 +76,23 @@ public class GitHubApiService {
     String url = END_POINT + "search/code?q="+ queryFragment + "+repo:"+ owner + "/" + repository;
     logRequest(url);
     return restTemplate.getForObject(url, SearchResultDto.class);
+  }
+
+  @Retryable(backoff = @Backoff(delay = 30000))
+  public DockerComposeDto getDockerComposeFileContent(String owner, String repository, String path){
+    try{
+      if(StringUtils.isEmpty(owner) || StringUtils.isEmpty(repository) || StringUtils.isEmpty(path)) return null;
+      String url = END_POINT + "repos/" + owner + "/" + repository + "/contents/" + path;
+      logRequest(url);
+      HttpHeaders headers = new HttpHeaders();
+      headers.setAccept(List.of(new MediaType("application", "vnd.github.raw")));
+      HttpEntity<String> entity = new HttpEntity<>(headers);
+      ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET,entity, new ParameterizedTypeReference<>() {});
+      return YAMLHelper.yamlToDto(response.getBody());
+    }catch (Exception exception){
+      exception.printStackTrace();
+    }
+   return null;
   }
 
   private void logRequest(String url) {

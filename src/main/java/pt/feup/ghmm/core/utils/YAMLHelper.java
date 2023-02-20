@@ -5,8 +5,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.thymeleaf.util.StringUtils;
 import pt.feup.ghmm.core.dtos.DockerComposeDto;
 
-import java.io.IOException;
-
 public class YAMLHelper {
 
     public static DockerComposeDto yamlToDto (String content){
@@ -14,7 +12,7 @@ public class YAMLHelper {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         try {
             return mapper.readValue(content, DockerComposeDto.class);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
