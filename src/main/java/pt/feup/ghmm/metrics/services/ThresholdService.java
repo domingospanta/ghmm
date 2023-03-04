@@ -10,23 +10,24 @@ import pt.feup.ghmm.metrics.repositories.ThresholdRepository;
 public class ThresholdService {
     private ThresholdRepository repository;
 
-    public Threshold findOrCreateByMetric(String metric, boolean microservice) {
+    public Threshold findOrCreateByMetric(String metric, boolean microservice, boolean microserviceSet) {
         if(metric == null){
             return null;
         }
-        Threshold threshold = repository.findByMetricAndMicroservice(metric, microservice);
+        Threshold threshold = repository.findByMetricAndMicroserviceAndMicroserviceSet(metric, microservice, microserviceSet);
         if(threshold != null) return threshold;
 
         threshold = Threshold.builder()
                     .metric(metric)
                     .microservice(microservice)
+                    .microserviceSet(microserviceSet)
                     .build();
         repository.save(threshold);
         return threshold;
     }
 
-    public Threshold findByMetric(String metric){
-        return repository.findByMetricAndMicroservice(metric, true);
+    public Threshold findByMetric(String metric, boolean microserviceSet){
+        return repository.findByMetricAndMicroserviceAndMicroserviceSet(metric, true, microserviceSet);
     }
 
     public void update(Threshold threshold){
