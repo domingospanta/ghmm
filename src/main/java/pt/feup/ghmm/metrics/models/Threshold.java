@@ -24,5 +24,8 @@ public class Threshold {
     @NotNull(message = "Microservice flag is mandatory")
     private boolean microservice;
 
+    @NotNull(message = "MicroserviceSet flag is mandatory")
+    private boolean microserviceSet;
+
     private double thresholdValue;
 }

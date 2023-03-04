@@ -22,7 +22,6 @@ public class RepoExampleMetrics {
     @GeneratedValue
     private Long id;
 
-    @NotNull(message = "RepoExample is mandatory")
     @OneToOne(cascade = CascadeType.REMOVE)
     private RepoExample repoExample;
 
