@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface ThresholdRepository extends CrudRepository<Threshold, Long> {
 
-    Threshold findByMetricAndMicroservice(String metric, boolean microservice);
+    Threshold findByMetricAndMicroserviceAndMicroserviceSet(String metric, boolean microservice, boolean microserviceSet);
 
     Optional<Threshold> findByMetric(String metric);
 }

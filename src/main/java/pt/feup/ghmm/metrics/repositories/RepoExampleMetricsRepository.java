@@ -15,13 +15,24 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
 
     List<RepoExampleMetrics> findAll();
 
-    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderBySizeAsc(boolean microservice);
+    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderBySizeAsc(boolean microservice, boolean microserviceSet);
 
-    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderByFilesAsc(boolean microservice);
+    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByFilesAsc(boolean microservice, boolean microserviceSet);
 
-    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceOrderByAllContentsNumberAsc(boolean microservice);
+    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByAllContentsNumberAsc(boolean microservice, boolean microserviceSet);
 
     Page<RepoExampleMetrics> findByRepoExampleUrlContainingIgnoreCase(String keyword, Pageable paging);
+
+
+    @Query(value = "SELECT m FROM RepoExampleMetrics m " +
+            "WHERE m.databaseConnection = false " +
+            "AND m.dockerfile = false " +
+            "AND m.logsService = false " +
+            "AND m.messaging = false " +
+            "AND m.microserviceMention = false " +
+            "AND m.restful = false " +
+            "AND m.soap = false ")
+    List<RepoExampleMetrics> findAllMissProcessedMetrics();
 
     long countAllByRepoExampleMicroservice(boolean microservice);
 
@@ -79,4 +90,6 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
     long countByLogsServiceTrueAndRepoExampleMicroservice(boolean microservice);
 
     long countByLogsServiceFalseAndRepoExampleMicroservice(boolean microservice);
+
+    List<RepoExampleMetrics> findAllByRepoExampleId(Long id);
 }
