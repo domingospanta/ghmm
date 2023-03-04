@@ -12,6 +12,8 @@ import pt.feup.ghmm.core.services.GitHubApiService;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
+import pt.feup.ghmm.metrics.models.Service;
+import pt.feup.ghmm.metrics.repositories.ProcessExecutionRepository;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 
 import java.util.ArrayList;
@@ -33,6 +35,15 @@ class RepoExampleMetricsServiceTest {
 
     @MockBean
     private RepoExampleService repoExampleService;
+
+    @MockBean
+    ProcessExecutionRepository processExecutionRepository;
+
+    @MockBean
+    ServiceService serviceService;
+
+    @MockBean
+    MetricsDerivationService metricsDerivationService;
 
     @Autowired
     private GitHubApiService gitHubApiService;

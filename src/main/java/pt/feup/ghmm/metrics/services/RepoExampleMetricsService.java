@@ -42,7 +42,7 @@ public class RepoExampleMetricsService {
 
     private RepoExampleService repoExampleService;
 
-    MetricsDerivationService metricsDerivationService;
+    private MetricsDerivationService metricsDerivationService;
 
     public Page<RepoExampleMetrics> findAll(Pageable paging) {
         return repository.findAll(paging);
@@ -51,7 +51,7 @@ public class RepoExampleMetricsService {
     @Async
     public CompletableFuture<List<RepoExampleMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<RepoExample> repoExamples){
         if(CollectionUtils.isEmpty(repoExamples)){
-            saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted: nothing to process.", false, false);
+            saveProcessExecution(processExecution, 0, 0, "Execution interrupted: nothing to process.", false, false);
             executeMetricsOperations();
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
@@ -157,6 +157,7 @@ public class RepoExampleMetricsService {
     }
 
     private ProcessExecution saveProcessExecution(ProcessExecution processExecution, int totalItems, int processedItems, String message, boolean running, boolean error) {
+        if(processExecution == null) return null;
         logger.info("Processed " +  processedItems + " of " + totalItems);
         processExecution.setTotalItems(totalItems);
         processExecution.setProcessedItems(processedItems);
