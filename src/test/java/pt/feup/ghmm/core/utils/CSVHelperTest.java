@@ -31,14 +31,14 @@ class CSVHelperTest {
 
         MockMultipartFile file = new MockMultipartFile("test.json", "", "text/csv", ("" +
                 "owner,name,url,microservice\n" +
-                ",instana.robot.shop,https://github.com/instana/robot-shop,TRUE").getBytes());
+                ",robot-shop,https://github.com/instana/robot-shop,TRUE").getBytes());
 
         repoExamples = CSVHelper.csvToRepoExamples(file.getInputStream());
         assertEquals( 1, repoExamples.size());
 
         RepoExample repoExample = repoExamples.get(0);
         assertEquals( "instana", repoExample.getOwner());
-        assertEquals( "instana.robot.shop", repoExample.getName());
+        assertEquals( "robot-shop", repoExample.getName());
         assertEquals( "https://github.com/instana/robot-shop", repoExample.getUrl());
         assertTrue( repoExample.isMicroservice());
     }
