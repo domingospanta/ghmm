@@ -52,8 +52,7 @@ public class RepoExampleMetricsService {
     public CompletableFuture<List<RepoExampleMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<RepoExample> repoExamples){
         if(CollectionUtils.isEmpty(repoExamples)){
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted: nothing to process.", false, false);
-            computeServicesCount();
-            metricsDerivationService.runMetricsDerivation();
+            executeMetricsOperations();
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
         saveProcessExecution(processExecution, repoExamples.size(), 0, "Starting execution.", true, false);
@@ -65,12 +64,25 @@ public class RepoExampleMetricsService {
                 saveStatusRepoExampleMetrics(repoMetrics, metrics, repoExample);
                 saveProcessExecution(processExecution, repoExamples.size(), i+1, "Progressing execution.", true, false);
             }
-            metricsDerivationService.runMetricsDerivation();
+            executeMetricsOperations();
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Finished execution successfully.", false, false);
         } catch (HttpClientErrorException.Forbidden exception){
             saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted due to Git Rest API client error.", false, true);
         }
         return CompletableFuture.completedFuture(metrics);
+    }
+
+    private void executeMetricsOperations() {
+        cleanUpMetrics();
+        computeServicesCount();
+        metricsDerivationService.runMetricsDerivation();
+    }
+
+    private void cleanUpMetrics() {
+        List<RepoExampleMetrics> metricsList = repository.findAllMissProcessedMetrics();
+        if(CollectionUtils.isEmpty(metricsList)) return;
+        logger.info("cleanUpMetrics removing " + metricsList.size() + " miss processed metrics!");
+        repository.deleteAll(metricsList);
     }
 
 
@@ -87,13 +99,43 @@ public class RepoExampleMetricsService {
             repoExampleMetrics.setDatabaseServices(databaseServices);
             repoExampleMetrics.setMessagingServices(messagingServices);
             repoExampleMetrics.setLogServices(logServices);
+            RepoExample repoExample = repoExampleMetrics.getRepoExample();
+            if(repoExample.isMicroservice() &&
+                    programmingLanguagesCount > 1 && databaseServices > 1){
+                repoExample.setMicroserviceSet(true);
+            }else {
+                repoExample.setMicroserviceSet(false);
+            }
+            updateDatabaseFlag(repoExampleMetrics, databaseServices);
+            updateMessagingFlag(repoExampleMetrics, messagingServices);
+            updateLogsFlag(repoExampleMetrics, logServices);
+            repoExampleService.save(repoExample);
             repository.save(repoExampleMetrics);
+        }
+    }
+
+    private void updateLogsFlag(RepoExampleMetrics metrics, long logServices) {
+        if(logServices > 0 && !metrics.isLogsService()){
+            metrics.setLogsService(true);
+        }
+    }
+
+    private void updateMessagingFlag(RepoExampleMetrics metrics, long messagingServices) {
+        if(messagingServices > 0 && !metrics.isMessaging()){
+            metrics.setMessaging(true);
+        }
+    }
+
+    private void updateDatabaseFlag(RepoExampleMetrics metrics, long databaseServices) {
+        if(databaseServices > 0 && !metrics.isDatabaseConnection()){
+            metrics.setDatabaseConnection(true);
         }
     }
 
     private void saveStatusRepoExampleMetrics(RepoExampleMetrics repoMetrics, List<RepoExampleMetrics> metrics, RepoExample repoExample) {
         try {
             if (repoMetrics != null) {
+                removeOldMetrics(repoMetrics);
                 metrics.add(repoMetrics);
                 repository.save(repoMetrics);
                 repoExample.setProcessed(true);
@@ -101,6 +143,16 @@ public class RepoExampleMetricsService {
             }
         } catch (Exception exception) {
             logger.error("Error saving metrics por repo: " + repoExample.getUrl(), exception);
+        }
+    }
+
+    private void removeOldMetrics(RepoExampleMetrics repoMetrics) {
+        List<RepoExampleMetrics> existingMetrics = repository.findAllByRepoExampleId(repoMetrics.getRepoExample().getId());
+        if(CollectionUtils.isEmpty(existingMetrics)) return;
+        for(RepoExampleMetrics exampleMetric: existingMetrics){
+            exampleMetric.setRepoExample(null);
+            repository.save(exampleMetric);
+            repository.delete(exampleMetric);
         }
     }
 
@@ -266,6 +318,7 @@ public class RepoExampleMetricsService {
     private boolean hasMicroserviceMention(RepoExample repoExample) {
         List<String> queryFragments = Arrays.asList("microservice", "micro-service");
         for(String queryFragment: queryFragments){
+            if(repoExample.getName().contains(queryFragment)) return true;
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return true;
@@ -276,7 +329,7 @@ public class RepoExampleMetricsService {
 
     private boolean hasDatabaseConnection(RepoExample repoExample) {
         List<String> queryFragments = Arrays.asList("database", "language:sql", "oracle", "mysql", "SQL Server", "SQLite",
-                "postgres", "cassandra", "mongodb");
+                "postgres", "cassandra", "mongodb", "extension:db");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
@@ -287,10 +340,12 @@ public class RepoExampleMetricsService {
     }
 
     private long getDockerfiles(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("language:Dockerfile","docker-compose", "docker");
+        List<String> queryFragments = Arrays.asList("docker","language:Dockerfile","docker-compose", "language:Makefile");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
-            return searchResultDto.getTotalCount();
+            if(searchResultDto.getTotalCount() > 0){
+                return searchResultDto.getTotalCount();
+            }
         }
         return 0;
     }
