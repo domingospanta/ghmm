@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html layout:decorate="~{page}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>Listing</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="pagetitle">
+        <h1>List of Metrics Generated</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item">Metrics</li>
+                <li class="breadcrumb-item active">List</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
+
+    <div class="card container" >
+        <div class="card-body table-responsive">
+            <div th:replace="~{fragments/searchBar :: searchBar('/metrics/all')}"> </div>
+            <div class="container">
+                <label>[[${totalItems}]] result(s)</label>
+            </div>
+            <!-- Table with stripped rows -->
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">Repo</th>
+                    <th scope="col">Size(kb)</th>
+                    <th scope="col">Lang(s)</th>
+                    <th scope="col">Contents#</th>
+                    <th scope="col">Ms Mention?</th>
+                    <th scope="col">BD?</th>
+                    <th scope="col">Dockerfile?</th>
+                    <th scope="col">Rest?</th>
+                    <th scope="col">Messaging?</th>
+                    <th scope="col">Soap?</th>
+                    <th scope="col">Logs?</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr th:each="metric : ${reposMetrics}">
+                    <th scope="row">
+                        <a th:href="@{${metric.repoExample.url}}" target="_blank">[[${metric.repoExample.name}]]</a>
+                    </th>
+                    <td>[[${metric.size}]]</td>
+                    <td>
+                        <th:block th:each="language : ${metric.languages}">
+                            [[${language.name}]]
+                        </th:block>
+                    </td>
+                    <td>[[${metric.allContentsNumber}]]</td>
+                    <td>[[${metric.microserviceMention}]]</td>
+                    <td>[[${metric.databaseConnection}]]</td>
+                    <td>[[${metric.dockerfile}]]</td>
+                    <td>[[${metric.restful}]]</td>
+                    <td>[[${metric.messaging}]]</td>
+                    <td>[[${metric.soap}]]</td>
+                    <td>[[${metric.logsService}]]</td>
+                </tr>
+                </tbody>
+            </table>
+            <!-- End Table with stripped rows -->
+
+
+            <nav aria-label="Pagination" th:if="${totalPages > 0}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/metrics/all', 1, '<<', 'First Page')"></a>
+                    </li>
+                    <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${currentPage - 1}, 'Prev', 'Previous Page')"></a>
+                    </li>
+                    <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                    <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
+                        th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${page}, ${page}, 'Page ' + ${page})"></a>
+                    </li>
+                    <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                    <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${currentPage + 1},'Next', 'Next Page')"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/metrics/all', ${totalPages}, '>>', 'Last Page')"></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <!--
+        <div class="modal fade text-center" id="confirmModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Delete Confirmation</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <span id="confirmText"></span>
+                    </div>
+
+                    <div class="modal-footer">
+                        <a type="button" id="yesBtn" class="btn btn-danger">Yes</a>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        -->
+        </div>
+    </div>
+</div>
+</body>
+</html>

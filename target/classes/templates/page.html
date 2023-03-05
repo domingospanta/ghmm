@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>GHMM Tool</title>
+    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.3/css/bootstrap.min.css} "/>
+    <script th:src="@{/webjars/jquery/3.6.1/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/5.2.3/js/bootstrap.bundle.min.js}"></script>
+
+    <link th:href="@{/css/style.css}" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <script th:src="@{/js/custom.js}"></script>
+
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"> </div>
+
+
+<aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+        <li class="nav-item">
+            <a class="nav-link " href="/">
+                <i class="bi bi-grid"></i>
+                <span>Corpus</span>
+            </a>
+        </li><!-- End Dashboard Nav -->
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-table"></i></i><span>Repo Examples</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="/repo/examples/all">
+                        <i class="bi bi-circle"></i><span>List</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/repo/examples/upload">
+                        <i class="bi bi-circle"></i><span>Add/Upload</span>
+                    </a>
+                </li>
+            </ul>
+        </li><!-- End Components Nav -->
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-file-bar-graph"></i><span>Metrics</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="/metrics/all">
+                        <i class="bi bi-circle"></i><span>List</span>
+                    </a>
+                    <a href="/metrics/generation">
+                        <i class="bi bi-circle"></i><span>Generation</span>
+                    </a>
+                    <a href="/metrics/statistics">
+                        <i class="bi bi-circle"></i><span>Statistics</span>
+                    </a>
+                </li>
+            </ul>
+        </li><!-- End Forms Nav -->
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-sort-down"></i></i><span>Identification</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="tables-general.html">
+                        <i class="bi bi-circle"></i><span>Method</span>
+                    </a>
+                </li>
+            </ul>
+        </li><!-- End Tables Nav -->
+    </ul>
+
+</aside><!-- End Sidebar-->
+
+
+<main id="main" class="main">
+    <section layout:fragment="content" >
+        <p>Page content goes here</p>
+    </section>
+</main>
+
+
+<div th:replace="~{fragments/footer :: footer}"> </div>
+</body>
+</html>

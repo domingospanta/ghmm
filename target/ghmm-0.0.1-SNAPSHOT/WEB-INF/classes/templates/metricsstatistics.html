@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html layout:decorate="~{page}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>Listing</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="pagetitle">
+        <h1>Statistics</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item">Metrics</li>
+                <li class="breadcrumb-item active">Statistics</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
+
+    <div class="row">
+
+        <div th:replace="~{fragments/statistics :: statistics(title='Microservices', metrics=${msMetrics})}"> </div>
+        <div th:replace="~{fragments/statistics :: statistics(title='Monoliths', metrics=${moMetrics})}"> </div>
+
+    </div>
+</div>
+</body>
+</html>

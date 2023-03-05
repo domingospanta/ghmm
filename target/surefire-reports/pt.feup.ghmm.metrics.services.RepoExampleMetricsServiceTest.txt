@@ -1,0 +1,8 @@
+-------------------------------------------------------------------------------
+Test set: pt.feup.ghmm.metrics.services.RepoExampleMetricsServiceTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.749 s <<< FAILURE! - in pt.feup.ghmm.metrics.services.RepoExampleMetricsServiceTest
+generateMetrics  Time elapsed: 0.604 s  <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "pt.feup.ghmm.metrics.models.RepoExample.getUrl()" because "repoExample" is null
+	at pt.feup.ghmm.metrics.services.RepoExampleMetricsServiceTest.generateMetrics(RepoExampleMetricsServiceTest.java:70)
+
