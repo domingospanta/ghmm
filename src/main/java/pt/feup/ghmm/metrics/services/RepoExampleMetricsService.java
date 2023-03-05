@@ -254,14 +254,18 @@ public class RepoExampleMetricsService {
 
     private Map<String, ServiceDto> getAllServices(RepoExample repoExample) {
         String queryFragment = "services:+language:YAML";
-        SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
         Map<String, ServiceDto> allServices = new HashMap<>();
-        for(ItemDto itemDto: searchResultDto.getItems()){
-            if(itemDto.getPath().contains("{")) continue;
-            DockerComposeDto dockerComposeDto = gitHubApiService.getDockerComposeFileContent(repoExample.getOwner(), repoExample.getName(), itemDto.getPath());
-            if(dockerComposeDto != null && !MapUtils.isEmpty(dockerComposeDto.getServices())){
-                allServices.putAll(dockerComposeDto.getServices());
+        try {
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            for(ItemDto itemDto: searchResultDto.getItems()){
+                if(itemDto.getPath().contains("{")) continue;
+                DockerComposeDto dockerComposeDto = gitHubApiService.getDockerComposeFileContent(repoExample.getOwner(), repoExample.getName(), itemDto.getPath());
+                if(dockerComposeDto != null && !MapUtils.isEmpty(dockerComposeDto.getServices())){
+                    allServices.putAll(dockerComposeDto.getServices());
+                }
             }
+        } catch (Exception exception){
+            logger.error("exception found while trying to recover services for " + repoExample.getUrl(), exception);
         }
         return allServices;
     }
@@ -373,7 +377,7 @@ public class RepoExampleMetricsService {
     }
 
     private boolean hasMessaging(RepoExample repoExample) {
-        List<String> queryFragments = Arrays.asList("kafka", "RabbitMQ" + "producer", "consumer", "amqp");
+        List<String> queryFragments = Arrays.asList("kafka", "RabbitMQ", "producer", "consumer", "amqp");
         for(String queryFragment: queryFragments){
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
