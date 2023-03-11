@@ -20,17 +20,20 @@ import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
 import pt.feup.ghmm.metrics.repositories.ProcessExecutionRepository;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
+import pt.feup.ghmm.metrics.repositories.RepoMinedMetricsRepository;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 @Service
-public class RepoExampleMetricsService {
+public class CodeRepoMetricsService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RepoExampleMetricsService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CodeRepoMetricsService.class);
 
-    private RepoExampleMetricsRepository repository;
+    private RepoExampleMetricsRepository repoExampleMetricsRepository;
+
+    private RepoMinedMetricsRepository repoMinedMetricsRepository;
 
     private ProcessExecutionRepository processExecutionRepository;
 
@@ -45,7 +48,7 @@ public class RepoExampleMetricsService {
     private MetricsDerivationService metricsDerivationService;
 
     public Page<RepoExampleMetrics> findAll(Pageable paging) {
-        return repository.findAll(paging);
+        return repoExampleMetricsRepository.findAll(paging);
     }
 
     @Async
@@ -79,15 +82,15 @@ public class RepoExampleMetricsService {
     }
 
     private void cleanUpMetrics() {
-        List<RepoExampleMetrics> metricsList = repository.findAllMissProcessedMetrics();
+        List<RepoExampleMetrics> metricsList = repoExampleMetricsRepository.findAllMissProcessedMetrics();
         if(CollectionUtils.isEmpty(metricsList)) return;
         logger.info("cleanUpMetrics removing " + metricsList.size() + " miss processed metrics!");
-        repository.deleteAll(metricsList);
+        repoExampleMetricsRepository.deleteAll(metricsList);
     }
 
 
     private void computeServicesCount() {
-        List<RepoExampleMetrics> repoExampleMetricsList = repository.findAll();
+        List<RepoExampleMetrics> repoExampleMetricsList = repoExampleMetricsRepository.findAll();
         for(RepoExampleMetrics repoExampleMetrics: repoExampleMetricsList){
             Set<pt.feup.ghmm.metrics.models.Service> services = repoExampleMetrics.getServices();
             services = serviceService.updateType(services);
@@ -110,7 +113,7 @@ public class RepoExampleMetricsService {
             updateMessagingFlag(repoExampleMetrics, messagingServices);
             updateLogsFlag(repoExampleMetrics, logServices);
             codeRepoService.save(repoExample);
-            repository.save(repoExampleMetrics);
+            repoExampleMetricsRepository.save(repoExampleMetrics);
         }
     }
 
@@ -137,7 +140,7 @@ public class RepoExampleMetricsService {
             if (repoMetrics != null) {
                 removeOldMetrics(repoMetrics);
                 metrics.add(repoMetrics);
-                repository.save(repoMetrics);
+                repoExampleMetricsRepository.save(repoMetrics);
                 repoExample.setProcessed(true);
                 codeRepoService.save(repoExample);
             }
@@ -147,12 +150,12 @@ public class RepoExampleMetricsService {
     }
 
     private void removeOldMetrics(RepoExampleMetrics repoMetrics) {
-        List<RepoExampleMetrics> existingMetrics = repository.findAllByRepoExampleId(repoMetrics.getRepoExample().getId());
+        List<RepoExampleMetrics> existingMetrics = repoExampleMetricsRepository.findAllByRepoExampleId(repoMetrics.getRepoExample().getId());
         if(CollectionUtils.isEmpty(existingMetrics)) return;
         for(RepoExampleMetrics exampleMetric: existingMetrics){
             exampleMetric.setRepoExample(null);
-            repository.save(exampleMetric);
-            repository.delete(exampleMetric);
+            repoExampleMetricsRepository.save(exampleMetric);
+            repoExampleMetricsRepository.delete(exampleMetric);
         }
     }
 
@@ -404,11 +407,11 @@ public class RepoExampleMetricsService {
     }
 
     public Page<RepoExampleMetrics> findByRepoExamples(String keyword, Pageable paging) {
-        return repository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
+        return repoExampleMetricsRepository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
     }
 
     public long countAllByMicroservice(boolean microservice) {
-        return repository.countAllByRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countAllByRepoExampleMicroservice(microservice);
     }
 
     public MetricsStatisticsDto getMetricsStatistics(boolean microservice) {
@@ -462,94 +465,94 @@ public class RepoExampleMetricsService {
 
 
     public long findMaxRepoFiles(){
-        return repository.findMaxRepoFiles();
+        return repoExampleMetricsRepository.findMaxRepoFiles();
     }
 
     public long findMinRepoFiles(){
-        return repository.findMinRepoFiles();
+        return repoExampleMetricsRepository.findMinRepoFiles();
     }
 
     public long findAverageRepoFiles(){
-        return repository.findAverageRepoFiles();
+        return repoExampleMetricsRepository.findAverageRepoFiles();
     }
 
     public long findMaxRepoAllContentsNumber(){
-        return repository.findMaxRepoAllContentsNumber();
+        return repoExampleMetricsRepository.findMaxRepoAllContentsNumber();
     }
 
     public long findMinRepoAllContentsNumber(){
-        return repository.findMinRepoAllContentsNumber();
+        return repoExampleMetricsRepository.findMinRepoAllContentsNumber();
     }
 
     public long findAverageRepoAllContentsNumber(){
-        return repository.findAverageRepoAllContentsNumber();
+        return repoExampleMetricsRepository.findAverageRepoAllContentsNumber();
     }
 
     public long findMaxSize(){
-        return repository.findMaxSize();
+        return repoExampleMetricsRepository.findMaxSize();
     }
 
     public long findMinSize(){
-        return repository.findMinSize();
+        return repoExampleMetricsRepository.findMinSize();
     }
 
     public long findAverageSize(){
-        return repository.findAverageSize();
+        return repoExampleMetricsRepository.findAverageSize();
     }
 
     public long countByMicroserviceMentionTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByMicroserviceMentionTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByMicroserviceMentionTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countByMicroserviceMentionFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByMicroserviceMentionFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByMicroserviceMentionFalseAndRepoExampleMicroservice(microservice);
     }
 
     public long countByDatabaseConnectionTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByDatabaseConnectionTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByDatabaseConnectionTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countByDatabaseConnectionFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByDatabaseConnectionFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByDatabaseConnectionFalseAndRepoExampleMicroservice(microservice);
     }
 
     public long countByDockerfileTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByDockerfileTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByDockerfileTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countByDockerfileFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByDockerfileFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByDockerfileFalseAndRepoExampleMicroservice(microservice);
     }
 
     public long countByRestfulTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByRestfulTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByRestfulTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countByRestfulFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByRestfulFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByRestfulFalseAndRepoExampleMicroservice(microservice);
     }
 
     public long countByMessagingTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByMessagingTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByMessagingTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countByMessagingFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByMessagingFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByMessagingFalseAndRepoExampleMicroservice(microservice);
     }
 
     public long countBySoapTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countBySoapTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countBySoapTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countBySoapFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countBySoapFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countBySoapFalseAndRepoExampleMicroservice(microservice);
     }
 
     public long countByLogsServiceTrueAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByLogsServiceTrueAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByLogsServiceTrueAndRepoExampleMicroservice(microservice);
     }
 
     public long countByLogsServiceFalseAndRepoExampleMicroservice(boolean microservice){
-        return repository.countByLogsServiceFalseAndRepoExampleMicroservice(microservice);
+        return repoExampleMetricsRepository.countByLogsServiceFalseAndRepoExampleMicroservice(microservice);
     }
 }

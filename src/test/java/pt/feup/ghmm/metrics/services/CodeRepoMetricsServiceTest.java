@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureWebClient
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {RepoExampleMetricsService.class, GitHubApiService.class})
-class RepoExampleMetricsServiceTest {
+@ContextConfiguration(classes = {CodeRepoMetricsService.class, GitHubApiService.class})
+class CodeRepoMetricsServiceTest {
 
     @MockBean
     private RepoExampleMetricsRepository repository;
@@ -48,15 +48,15 @@ class RepoExampleMetricsServiceTest {
     private GitHubApiService gitHubApiService;
 
     @Autowired
-    private RepoExampleMetricsService repoExampleMetricsService;
+    private CodeRepoMetricsService codeRepoMetricsService;
 
     @Test
     void generateMetrics() throws ExecutionException, InterruptedException {
-        List<RepoExampleMetrics> repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(null, null).get();
+        List<RepoExampleMetrics> repoExampleMetrics = codeRepoMetricsService.runMetricsExtraction(null, null).get();
         assertEquals(repoExampleMetrics.size(), 0);
 
         List<RepoExample> repoExamples = new ArrayList<>();
-        repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
+        repoExampleMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
         assertEquals(repoExampleMetrics.size(), 0);
 
         RepoExample repoExample = RepoExample.builder()
@@ -66,7 +66,7 @@ class RepoExampleMetricsServiceTest {
                 .build();
         repoExamples.add(repoExample);
 
-        repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(ProcessExecution.builder()
+        repoExampleMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder()
                 .running(true)
                 .processType("Metrics")
                 .build(), repoExamples).get();

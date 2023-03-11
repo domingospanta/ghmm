@@ -10,8 +10,8 @@ import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
+import pt.feup.ghmm.metrics.services.CodeRepoMetricsService;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
-import pt.feup.ghmm.metrics.services.RepoExampleMetricsService;
 
 import java.util.List;
 
@@ -19,15 +19,15 @@ import java.util.List;
 @RequestMapping("/metrics")
 public class MetricsController {
 
-    private RepoExampleMetricsService repoExampleMetricsService;
+    private CodeRepoMetricsService codeRepoMetricsService;
     private CodeRepoService codeRepoService;
     private final String LIST_PAGE = "metricslist";
     private final String GENERATE_PAGE = "metricsgeneration";
     private final String STATISTICS_PAGE = "metricsstatistics";
     private ProcessExecution processExecution;
 
-    public MetricsController(RepoExampleMetricsService repoExampleMetricsService, CodeRepoService codeRepoService) {
-        this.repoExampleMetricsService = repoExampleMetricsService;
+    public MetricsController(CodeRepoMetricsService codeRepoMetricsService, CodeRepoService codeRepoService) {
+        this.codeRepoMetricsService = codeRepoMetricsService;
         this.codeRepoService = codeRepoService;
     }
 
@@ -42,9 +42,9 @@ public class MetricsController {
 
             Page<RepoExampleMetrics> pageTuts;
             if (keyword == null) {
-                pageTuts = repoExampleMetricsService.findAll(paging);
+                pageTuts = codeRepoMetricsService.findAll(paging);
             } else {
-                pageTuts = repoExampleMetricsService.findByRepoExamples(keyword, paging);
+                pageTuts = codeRepoMetricsService.findByRepoExamples(keyword, paging);
                 model.addAttribute("keyword", keyword);
             }
 
@@ -78,8 +78,8 @@ public class MetricsController {
     @GetMapping("/generation/start")
     @ResponseBody
     public String startMetricsGeneration(){
-        processExecution = repoExampleMetricsService.createProcessExecution();
-        repoExampleMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
+        processExecution = codeRepoMetricsService.createProcessExecution();
+        codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
         return "started";
     }
 
@@ -87,7 +87,7 @@ public class MetricsController {
     @ResponseBody
     public ProcessExecutionDto getMetricsGenerationStatus(){
         if(processExecution == null) return ProcessExecutionDto.builder().build();
-        processExecution = repoExampleMetricsService.getProcessExecutionById(processExecution.getId());
+        processExecution = codeRepoMetricsService.getProcessExecutionById(processExecution.getId());
         return ProcessExecutionDto.builder()
                 .message(processExecution.getMessage())
                 .running(processExecution.isRunning())
@@ -100,9 +100,9 @@ public class MetricsController {
 
     @GetMapping("/statistics")
     public String getMetricsStatisticsPage(Model model){
-        MetricsStatisticsDto metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics(true);
+        MetricsStatisticsDto metricsStatisticsDto = codeRepoMetricsService.getMetricsStatistics(true);
         model.addAttribute("msMetrics", metricsStatisticsDto);
-        metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics(false);
+        metricsStatisticsDto = codeRepoMetricsService.getMetricsStatistics(false);
         model.addAttribute("moMetrics", metricsStatisticsDto);
         return STATISTICS_PAGE;
     }
