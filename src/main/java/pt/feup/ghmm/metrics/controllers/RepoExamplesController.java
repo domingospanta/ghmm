@@ -13,7 +13,7 @@ import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoExampleUploadDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.RepoExample;
-import pt.feup.ghmm.metrics.services.RepoExampleService;
+import pt.feup.ghmm.metrics.services.CodeRepoService;
 import pt.feup.ghmm.core.utils.CSVHelper;
 
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/repo/examples")
 public class RepoExamplesController {
 
-    private RepoExampleService repoExampleService;
+    private CodeRepoService codeRepoService;
 
     private final String LIST_PAGE = "repolist";
     private final String UPLOAD_PAGE = "repoupload";
@@ -39,9 +39,9 @@ public class RepoExamplesController {
 
             Page<RepoExample> pageTuts;
             if (keyword == null) {
-                pageTuts = repoExampleService.findAll(paging);
+                pageTuts = codeRepoService.findAll(paging);
             } else {
-                pageTuts = repoExampleService.findByUrlContainingIgnoreCase(keyword, paging);
+                pageTuts = codeRepoService.findByUrlContainingIgnoreCase(keyword, paging);
                 model.addAttribute("keyword", keyword);
             }
 
@@ -66,9 +66,9 @@ public class RepoExamplesController {
 
     @GetMapping("/delete/{id}")
     public String deleteRepoExample(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-        RepoExample repoExample = repoExampleService.findById(id);
+        RepoExample repoExample = codeRepoService.findById(id);
         if(repoExample != null){
-            RepoResult repoResult = repoExampleService.delete(repoExample);
+            RepoResult repoResult = codeRepoService.delete(repoExample);
             redirectAttributes.addFlashAttribute("result", repoResult);
         }
 
@@ -77,7 +77,7 @@ public class RepoExamplesController {
 
     @PostMapping("/add")
     public String addRepoExample(@ModelAttribute RepoExampleDto example, Model model) {
-        RepoResult repoResult = repoExampleService.save(example);
+        RepoResult repoResult = codeRepoService.save(example);
         model.addAttribute("result", repoResult);
         if(repoResult.isError()){
             model.addAttribute("example", example);
@@ -95,7 +95,7 @@ public class RepoExamplesController {
         List<RepoResult> repoResults = null;
         if (CSVHelper.hasCSVFormat(file)) {
             try {
-                repoResults = repoExampleService.save(file);
+                repoResults = codeRepoService.save(file);
                 model.addAttribute("results", repoResults);
                 message = "File uploaded successfully: " + file.getOriginalFilename();
                 error = false;

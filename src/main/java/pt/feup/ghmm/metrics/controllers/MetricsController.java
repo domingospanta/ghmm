@@ -10,8 +10,8 @@ import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
+import pt.feup.ghmm.metrics.services.CodeRepoService;
 import pt.feup.ghmm.metrics.services.RepoExampleMetricsService;
-import pt.feup.ghmm.metrics.services.RepoExampleService;
 
 import java.util.List;
 
@@ -20,15 +20,15 @@ import java.util.List;
 public class MetricsController {
 
     private RepoExampleMetricsService repoExampleMetricsService;
-    private RepoExampleService repoExampleService;
+    private CodeRepoService codeRepoService;
     private final String LIST_PAGE = "metricslist";
     private final String GENERATE_PAGE = "metricsgeneration";
     private final String STATISTICS_PAGE = "metricsstatistics";
     private ProcessExecution processExecution;
 
-    public MetricsController(RepoExampleMetricsService repoExampleMetricsService, RepoExampleService repoExampleService) {
+    public MetricsController(RepoExampleMetricsService repoExampleMetricsService, CodeRepoService codeRepoService) {
         this.repoExampleMetricsService = repoExampleMetricsService;
-        this.repoExampleService = repoExampleService;
+        this.codeRepoService = codeRepoService;
     }
 
     @GetMapping("/all")
@@ -65,10 +65,10 @@ public class MetricsController {
     @GetMapping("/generation")
     public String getMetricsGenerationPage(Model model){
         model.addAttribute("processing", processExecution != null && processExecution.isRunning());
-        long processedWithoutErrorTotal = repoExampleService.countAllByProcessedTrueAndProcessingErrorFalse();
-        long processedWithErrorTotal = repoExampleService.countAllByProcessedTrueAndProcessingErrorTrue();
-        long unprocessed = repoExampleService.countAllByProcessedFalse();
-        model.addAttribute("examplesTotal", repoExampleService.countAll());
+        long processedWithoutErrorTotal = codeRepoService.countAllByProcessedTrueAndProcessingErrorFalse();
+        long processedWithErrorTotal = codeRepoService.countAllByProcessedTrueAndProcessingErrorTrue();
+        long unprocessed = codeRepoService.countAllByProcessedFalse();
+        model.addAttribute("examplesTotal", codeRepoService.countAll());
         model.addAttribute("processedWithoutErrorTotal", processedWithoutErrorTotal);
         model.addAttribute("processedWithErrorTotal", processedWithErrorTotal);
         model.addAttribute("unprocessedTotal", unprocessed);
@@ -79,7 +79,7 @@ public class MetricsController {
     @ResponseBody
     public String startMetricsGeneration(){
         processExecution = repoExampleMetricsService.createProcessExecution();
-        repoExampleMetricsService.runMetricsExtraction(processExecution, repoExampleService.findByProcessedFalse());
+        repoExampleMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
         return "started";
     }
 

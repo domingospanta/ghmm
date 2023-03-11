@@ -40,7 +40,7 @@ public class RepoExampleMetricsService {
 
     private GitHubApiService gitHubApiService;
 
-    private RepoExampleService repoExampleService;
+    private CodeRepoService codeRepoService;
 
     private MetricsDerivationService metricsDerivationService;
 
@@ -109,7 +109,7 @@ public class RepoExampleMetricsService {
             updateDatabaseFlag(repoExampleMetrics, databaseServices);
             updateMessagingFlag(repoExampleMetrics, messagingServices);
             updateLogsFlag(repoExampleMetrics, logServices);
-            repoExampleService.save(repoExample);
+            codeRepoService.save(repoExample);
             repository.save(repoExampleMetrics);
         }
     }
@@ -139,7 +139,7 @@ public class RepoExampleMetricsService {
                 metrics.add(repoMetrics);
                 repository.save(repoMetrics);
                 repoExample.setProcessed(true);
-                repoExampleService.save(repoExample);
+                codeRepoService.save(repoExample);
             }
         } catch (Exception exception) {
             logger.error("Error saving metrics por repo: " + repoExample.getUrl(), exception);
@@ -182,7 +182,7 @@ public class RepoExampleMetricsService {
         try {
             MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
             if(mainRepositoryDto == null) return null;
-            repoExample = repoExampleService.update(repoExample, mainRepositoryDto);
+            repoExample = codeRepoService.update(repoExample, mainRepositoryDto);
             Set<Language> languages = getLanguages(repoExample);
             long programmingLanguagesCount = getProgrammingLanguagesCount(languages);
             long dockerfiles = getDockerfiles(repoExample);
@@ -224,7 +224,7 @@ public class RepoExampleMetricsService {
             repoExample.setProcessingError(true);
             repoExample.setProcessed(true);
             repoExample.setMessage(exception.getMessage());
-            repoExampleService.save(repoExample);
+            codeRepoService.save(repoExample);
         }
         catch (Exception exception){
             logger.error("Error processing repo: " + repoExample.getUrl());

@@ -20,17 +20,20 @@ import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
+import pt.feup.ghmm.metrics.repositories.RepoMinedRepository;
 
 import static pt.feup.ghmm.core.utils.CSVHelper.getOwnerFromUrl;
 import static pt.feup.ghmm.core.utils.CSVHelper.getRepositoryNameFromUrl;
 
 @AllArgsConstructor
 @Service
-public class RepoExampleService {
+public class CodeRepoService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RepoExampleService.class);
+    private static final Logger logger = LoggerFactory.getLogger(CodeRepoService.class);
 
-    private RepoExampleRepository repository;
+    private RepoExampleRepository repoExampleRepository;
+
+   private RepoMinedRepository repoMinedRepository;
 
     public List<RepoResult> save(MultipartFile file) {
         try {
@@ -44,7 +47,7 @@ public class RepoExampleService {
     public RepoExample findById(Long id){
         if(id == null) return null;
         try {
-            return repository.findById(id).orElse(null);
+            return repoExampleRepository.findById(id).orElse(null);
         } catch (Exception exception){
             logger.error("Error deleting repo of id: " + id, exception);
             return null;
@@ -54,7 +57,7 @@ public class RepoExampleService {
     public RepoResult delete(RepoExample repoExample){
         try {
             if(repoExample == null) return null;
-            repository.deleteById(repoExample.getId());
+            repoExampleRepository.deleteById(repoExample.getId());
         } catch (Exception exception){
             logger.error("Error deleting repo:" + repoExample.getUrl(), exception);
             return RepoResult.builder()
@@ -79,32 +82,32 @@ public class RepoExampleService {
     }
 
     public Page<RepoExample> findAll(Pageable paging) {
-        return repository.findAll(paging);
+        return repoExampleRepository.findAll(paging);
     }
 
     public List<RepoExample> findByProcessedFalse() {
-        return repository.findByProcessedFalse();
+        return repoExampleRepository.findByProcessedFalse();
     }
 
     public Page<RepoExample> findByUrlContainingIgnoreCase(String keyword, Pageable paging) {
-        return repository.findByUrlContainingIgnoreCase(keyword, paging);
+        return repoExampleRepository.findByUrlContainingIgnoreCase(keyword, paging);
     }
 
 
     public long countAllByProcessedTrueAndProcessingErrorFalse() {
-        return repository.countAllByProcessedTrueAndProcessingErrorFalse();
+        return repoExampleRepository.countAllByProcessedTrueAndProcessingErrorFalse();
     }
 
     public long countAllByProcessedTrueAndProcessingErrorTrue() {
-        return repository.countAllByProcessedTrueAndProcessingErrorTrue();
+        return repoExampleRepository.countAllByProcessedTrueAndProcessingErrorTrue();
     }
 
     public long countAllByProcessedFalse() {
-        return repository.countAllByProcessedFalse();
+        return repoExampleRepository.countAllByProcessedFalse();
     }
 
     public long countAll() {
-        return repository.count();
+        return repoExampleRepository.count();
     }
 
 
@@ -123,7 +126,7 @@ public class RepoExampleService {
 
     public RepoResult save(RepoExample repoExample) {
         try{
-            repository.save(repoExample);
+            repoExampleRepository.save(repoExample);
         }catch (TransactionSystemException | DataIntegrityViolationException exception){
             return RepoResult.builder()
                     .error(true)
@@ -147,7 +150,7 @@ public class RepoExampleService {
             repoExample.setUrl(repoCurrentUrl);
             repoExample.setName(getRepositoryNameFromUrl(repoCurrentUrl));
             repoExample.setOwner(getOwnerFromUrl(repoCurrentUrl));
-            repository.save(repoExample);
+            repoExampleRepository.save(repoExample);
         }
         return repoExample;
     }
