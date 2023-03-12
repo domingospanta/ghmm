@@ -39,7 +39,7 @@ public class RepoExamplesController {
 
             Page<RepoExample> pageTuts;
             if (keyword == null) {
-                pageTuts = codeRepoService.findAll(paging);
+                pageTuts = codeRepoService.findAllExamples(paging);
             } else {
                 pageTuts = codeRepoService.findByUrlContainingIgnoreCase(keyword, paging);
                 model.addAttribute("keyword", keyword);
@@ -95,7 +95,7 @@ public class RepoExamplesController {
         List<RepoResult> repoResults = null;
         if (CSVHelper.hasCSVFormat(file)) {
             try {
-                repoResults = codeRepoService.save(file);
+                repoResults = codeRepoService.save(file, true);
                 model.addAttribute("results", repoResults);
                 message = "File uploaded successfully: " + file.getOriginalFilename();
                 error = false;

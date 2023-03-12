@@ -9,24 +9,24 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import pt.feup.ghmm.core.utils.CSVHelper;
 import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoExampleUploadDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
-import pt.feup.ghmm.metrics.models.RepoExample;
+import pt.feup.ghmm.metrics.models.RepoMined;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
-import pt.feup.ghmm.core.utils.CSVHelper;
 
 import java.util.List;
 
 @AllArgsConstructor
 @Controller
-@RequestMapping("/repo/examples")
-public class RepoExamplesController {
+@RequestMapping("/repo/mined")
+public class RepoMinedController {
 
     private CodeRepoService codeRepoService;
 
-    private final String LIST_PAGE = "repolist";
-    private final String UPLOAD_PAGE = "repoupload";
+    private final String LIST_PAGE = "repoMinedList";
+    private final String UPLOAD_PAGE = "repoSearchOrUpload";
 
     @GetMapping("/all")
     public String getAll(Model model,
@@ -34,20 +34,20 @@ public class RepoExamplesController {
                          @RequestParam(defaultValue = "1") int page,
                          @RequestParam(defaultValue = "10") int size) {
         try {
-            List<RepoExample> repoExamples;
+            List<RepoMined> minedList;
             Pageable paging = PageRequest.of(page - 1, size);
 
-            Page<RepoExample> pageTuts;
+            Page<RepoMined> pageTuts;
             if (keyword == null) {
-                pageTuts = codeRepoService.findAll(paging);
+                pageTuts = codeRepoService.findAllMined(paging);
             } else {
-                pageTuts = codeRepoService.findByUrlContainingIgnoreCase(keyword, paging);
+                pageTuts = codeRepoService.findMinedReposByUrlContainingIgnoreCase(keyword, paging);
                 model.addAttribute("keyword", keyword);
             }
 
-            repoExamples = pageTuts.getContent();
+            minedList = pageTuts.getContent();
 
-            model.addAttribute("repoExamples", repoExamples);
+            model.addAttribute("repoExamples", minedList);
             model.addAttribute("currentPage", pageTuts.getNumber() + 1);
             model.addAttribute("totalItems", pageTuts.getTotalElements());
             model.addAttribute("totalPages", pageTuts.getTotalPages());
@@ -66,27 +66,14 @@ public class RepoExamplesController {
 
     @GetMapping("/delete/{id}")
     public String deleteRepoExample(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-        RepoExample repoExample = codeRepoService.findById(id);
-        if(repoExample != null){
-            RepoResult repoResult = codeRepoService.delete(repoExample);
+        RepoMined repoMined = codeRepoService.findRepoMinedById(id);
+        if(repoMined != null){
+            RepoResult repoResult = codeRepoService.deleteRepoMined(repoMined);
             redirectAttributes.addFlashAttribute("result", repoResult);
         }
 
         return "redirect:/repo/examples/all";
     }
-
-    @PostMapping("/add")
-    public String addRepoExample(@ModelAttribute RepoExampleDto example, Model model) {
-        RepoResult repoResult = codeRepoService.save(example);
-        model.addAttribute("result", repoResult);
-        if(repoResult.isError()){
-            model.addAttribute("example", example);
-        } else {
-            model.addAttribute("example", new RepoExampleDto());
-        }
-        return UPLOAD_PAGE;
-    }
-
 
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file, Model model) {
@@ -95,7 +82,7 @@ public class RepoExamplesController {
         List<RepoResult> repoResults = null;
         if (CSVHelper.hasCSVFormat(file)) {
             try {
-                repoResults = codeRepoService.save(file);
+                repoResults = codeRepoService.save(file, false);
                 model.addAttribute("results", repoResults);
                 message = "File uploaded successfully: " + file.getOriginalFilename();
                 error = false;
@@ -115,7 +102,7 @@ public class RepoExamplesController {
     }
 
     private String prepareDataForUploadPage(Model model) {
-        model.addAttribute("example", new RepoExampleDto());
+        model.addAttribute("minedRepo", new RepoExampleDto());
         return UPLOAD_PAGE;
     }
 }

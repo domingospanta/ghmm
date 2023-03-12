@@ -18,7 +18,9 @@ import pt.feup.ghmm.core.dtos.MainRepositoryDto;
 import pt.feup.ghmm.core.utils.CSVHelper;
 import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
+import pt.feup.ghmm.metrics.models.CodeRepo;
 import pt.feup.ghmm.metrics.models.RepoExample;
+import pt.feup.ghmm.metrics.models.RepoMined;
 import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
 import pt.feup.ghmm.metrics.repositories.RepoMinedRepository;
 
@@ -35,10 +37,10 @@ public class CodeRepoService {
 
    private RepoMinedRepository repoMinedRepository;
 
-    public List<RepoResult> save(MultipartFile file) {
+    public List<RepoResult> save(MultipartFile file, boolean examples) {
         try {
-            List<RepoExample> repoExamples = CSVHelper.csvToRepoExamples(file.getInputStream());
-            return saveAll(repoExamples);
+            List<CodeRepo> codeRepos = CSVHelper.csvToCodeRepos(file.getInputStream(), examples);
+            return saveAll(codeRepos);
         } catch (IOException e) {
             throw new RuntimeException("fail to store csv data: " + e.getMessage());
         }
@@ -48,6 +50,16 @@ public class CodeRepoService {
         if(id == null) return null;
         try {
             return repoExampleRepository.findById(id).orElse(null);
+        } catch (Exception exception){
+            logger.error("Error deleting repo of id: " + id, exception);
+            return null;
+        }
+    }
+
+    public RepoMined findRepoMinedById(Long id){
+        if(id == null) return null;
+        try {
+            return repoMinedRepository.findById(id).orElse(null);
         } catch (Exception exception){
             logger.error("Error deleting repo of id: " + id, exception);
             return null;
@@ -73,16 +85,39 @@ public class CodeRepoService {
                 .build();
     }
 
-    private List<RepoResult> saveAll(List<RepoExample> repoExamples) {
+    public RepoResult deleteRepoMined(RepoMined repoMined){
+        try {
+            if(repoMined == null) return null;
+            repoMinedRepository.deleteById(repoMined.getId());
+        } catch (Exception exception){
+            logger.error("Error deleting repo:" + repoMined.getUrl(), exception);
+            return RepoResult.builder()
+                    .repo(repoMined.getUrl())
+                    .error(true)
+                    .message(" error " + exception.getMessage() )
+                    .build();
+        }
+        return RepoResult.builder()
+                .repo(repoMined.getUrl())
+                .error(false)
+                .message(" deletion successful!")
+                .build();
+    }
+
+    private List<RepoResult> saveAll(List<CodeRepo> codeRepos) {
         List<RepoResult> repoResults = new ArrayList<>();
-        for(RepoExample example: repoExamples){
-            repoResults.add(save(example));
+        for(CodeRepo codeRepo: codeRepos){
+            repoResults.add(save(codeRepo));
         }
         return repoResults;
     }
 
-    public Page<RepoExample> findAll(Pageable paging) {
+    public Page<RepoExample> findAllExamples(Pageable paging) {
         return repoExampleRepository.findAll(paging);
+    }
+
+    public Page<RepoMined> findAllMined(Pageable paging) {
+        return repoMinedRepository.findAll(paging);
     }
 
     public List<RepoExample> findByProcessedFalse() {
@@ -91,6 +126,10 @@ public class CodeRepoService {
 
     public Page<RepoExample> findByUrlContainingIgnoreCase(String keyword, Pageable paging) {
         return repoExampleRepository.findByUrlContainingIgnoreCase(keyword, paging);
+    }
+
+    public Page<RepoMined> findMinedReposByUrlContainingIgnoreCase(String keyword, Pageable paging) {
+        return repoMinedRepository.findByUrlContainingIgnoreCase(keyword, paging);
     }
 
 
@@ -124,20 +163,24 @@ public class CodeRepoService {
             return save(repoExample);
     }
 
-    public RepoResult save(RepoExample repoExample) {
+    public RepoResult save(CodeRepo codeRepo) {
         try{
-            repoExampleRepository.save(repoExample);
+            if(codeRepo instanceof RepoExample){
+                repoExampleRepository.save((RepoExample)codeRepo);
+            }else {
+                repoMinedRepository.save((RepoMined) codeRepo);
+            }
         }catch (TransactionSystemException | DataIntegrityViolationException exception){
             return RepoResult.builder()
                     .error(true)
-                    .repo(repoExample.getUrl())
+                    .repo(codeRepo.getUrl())
                     .message(exception.getMessage())
                     .build();
         }
 
         return RepoResult.builder()
                 .error(false)
-                .repo(repoExample.getUrl())
+                .repo(codeRepo.getUrl())
                 .message("Saved successfully")
                 .build();
 

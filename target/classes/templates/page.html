@@ -25,10 +25,22 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-            <a class="nav-link " href="/">
+            <a class="nav-link collapsed" data-bs-target="#corpus-nav" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-grid"></i>
-                <span>Corpus</span>
+                <span>Corpus</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
+            <ul id="corpus-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="/repo/mined/all">
+                        <i class="bi bi-circle"></i><span>List</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/repo/mined/upload">
+                        <i class="bi bi-circle"></i><span>Search/Upload</span>
+                    </a>
+                </li>
+            </ul>
         </li><!-- End Dashboard Nav -->
 
         <li class="nav-item">
