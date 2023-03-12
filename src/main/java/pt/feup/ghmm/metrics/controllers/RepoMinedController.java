@@ -47,7 +47,7 @@ public class RepoMinedController {
 
             minedList = pageTuts.getContent();
 
-            model.addAttribute("repoExamples", minedList);
+            model.addAttribute("minedRepos", minedList);
             model.addAttribute("currentPage", pageTuts.getNumber() + 1);
             model.addAttribute("totalItems", pageTuts.getTotalElements());
             model.addAttribute("totalPages", pageTuts.getTotalPages());
