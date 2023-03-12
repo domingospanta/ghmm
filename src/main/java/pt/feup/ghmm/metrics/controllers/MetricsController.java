@@ -65,15 +65,12 @@ public class MetricsController {
     @GetMapping("/generation")
     public String getMetricsGenerationPage(Model model){
         model.addAttribute("processing", processExecution != null && processExecution.isRunning());
-        long processedWithoutErrorTotal = codeRepoService.countAllByProcessedTrueAndProcessingErrorFalse();
-        long processedWithErrorTotal = codeRepoService.countAllByProcessedTrueAndProcessingErrorTrue();
-        long unprocessed = codeRepoService.countAllByProcessedFalse();
-        model.addAttribute("examplesTotal", codeRepoService.countAll());
-        model.addAttribute("processedWithoutErrorTotal", processedWithoutErrorTotal);
-        model.addAttribute("processedWithErrorTotal", processedWithErrorTotal);
-        model.addAttribute("unprocessedTotal", unprocessed);
+
+        model.addAttribute("repoExampleMetrics", codeRepoMetricsService.getMetricsForCodeRepos(true));
+        model.addAttribute("minedRepoMetrics", codeRepoMetricsService.getMetricsForCodeRepos(false));
         return GENERATE_PAGE;
     }
+
 
     @GetMapping("/generation/start")
     @ResponseBody

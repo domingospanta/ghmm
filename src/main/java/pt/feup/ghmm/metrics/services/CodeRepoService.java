@@ -133,20 +133,36 @@ public class CodeRepoService {
     }
 
 
-    public long countAllByProcessedTrueAndProcessingErrorFalse() {
-        return repoExampleRepository.countAllByProcessedTrueAndProcessingErrorFalse();
+    public long countAllByProcessedTrueAndProcessingErrorFalse(boolean example) {
+        if(example){
+            return repoExampleRepository.countAllByProcessedTrueAndProcessingErrorFalse();
+        }
+        return repoMinedRepository.countAllByProcessedTrueAndProcessingErrorFalse();
     }
 
-    public long countAllByProcessedTrueAndProcessingErrorTrue() {
-        return repoExampleRepository.countAllByProcessedTrueAndProcessingErrorTrue();
+    public long countAllByProcessedTrueAndProcessingErrorTrue(boolean example) {
+        if(example){
+            return repoExampleRepository.countAllByProcessedTrueAndProcessingErrorTrue();
+        }
+        return repoMinedRepository.countAllByProcessedTrueAndProcessingErrorTrue();
     }
 
-    public long countAllByProcessedFalse() {
-        return repoExampleRepository.countAllByProcessedFalse();
+    public long countAllByProcessedFalse(boolean example) {
+        if(example){
+            return repoExampleRepository.countAllByProcessedFalse();
+        }
+        return repoMinedRepository.countAllByProcessedFalse();
     }
 
-    public long countAll() {
-        return repoExampleRepository.count();
+    public long countAll(boolean example) {
+        if(example){
+            return repoExampleRepository.count();
+        }
+        return repoMinedRepository.count();
+    }
+
+    public long countAllMinedRepos() {
+        return repoMinedRepository.count();
     }
 
 

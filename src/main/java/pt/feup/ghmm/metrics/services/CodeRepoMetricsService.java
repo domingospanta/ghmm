@@ -13,6 +13,7 @@ import org.thymeleaf.util.MapUtils;
 import pt.feup.ghmm.core.dtos.*;
 import pt.feup.ghmm.core.services.GitHubApiService;
 import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
+import pt.feup.ghmm.metrics.dtos.RepoMetricsDto;
 import pt.feup.ghmm.metrics.enums.ServiceType;
 import pt.feup.ghmm.metrics.models.Language;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
@@ -554,5 +555,18 @@ public class CodeRepoMetricsService {
 
     public long countByLogsServiceFalseAndRepoExampleMicroservice(boolean microservice){
         return repoExampleMetricsRepository.countByLogsServiceFalseAndRepoExampleMicroservice(microservice);
+    }
+
+    public RepoMetricsDto getMetricsForCodeRepos(boolean example) {
+        long processedWithoutErrorTotal = codeRepoService.countAllByProcessedTrueAndProcessingErrorFalse(example);
+        long processedWithErrorTotal = codeRepoService.countAllByProcessedTrueAndProcessingErrorTrue(example);
+        long unprocessed = codeRepoService.countAllByProcessedFalse(example);
+
+        return RepoMetricsDto.builder()
+                .total(codeRepoService.countAll(example))
+                .processedWithoutError(processedWithoutErrorTotal)
+                .processedWithError(processedWithErrorTotal)
+                .unprocessed(unprocessed)
+                .build();
     }
 }
