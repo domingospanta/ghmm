@@ -4971,3 +4971,8 @@ org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (
 2023-03-14 11:41:24 jdbc[13]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPO_MINED" not found; SQL statement:
 SELECT * FROM REPO_MINED [42102-214]
+2023-03-14 19:08:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM CODE_REPO_METRICS \000d\000awhere dtype = 'RepoMinedMetrics'\000d\000a[*]where repo_mined_id = 204"; SQL statement:
+SELECT * FROM CODE_REPO_METRICS 
+where dtype = 'RepoMinedMetrics'
+where repo_mined_id = 204 [42000-214]

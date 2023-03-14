@@ -137,8 +137,12 @@ public class MetricsDerivationService {
                 if(hasMsSetIndicator){
                     codeRepo.setClassification("MICROSERVICE_SET");
                 } else if(hasMonolithIndicator){
-                    codeRepo.setScore(codeRepo.getScore() - 2);
-                    codeRepo.setClassification("MONOLITH");
+                    codeRepo.setScore(codeRepo.getScore() - 1);
+                    if (score > MS_CLASSIFICATION_SCORE){
+                        codeRepo.setClassification("MICROSERVICE");
+                    }else {
+                        codeRepo.setClassification("MONOLITH");
+                    }
                 }
                 else {
                     codeRepo.setClassification("MICROSERVICE");
