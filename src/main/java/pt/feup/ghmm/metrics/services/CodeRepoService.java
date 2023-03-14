@@ -26,6 +26,7 @@ import pt.feup.ghmm.metrics.repositories.RepoMinedRepository;
 
 import static pt.feup.ghmm.core.utils.CSVHelper.getOwnerFromUrl;
 import static pt.feup.ghmm.core.utils.CSVHelper.getRepositoryNameFromUrl;
+import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
 
 @AllArgsConstructor
 @Service
@@ -120,9 +121,13 @@ public class CodeRepoService {
         return repoMinedRepository.findAll(paging);
     }
 
-    public List<RepoExample> findByProcessedFalse() {
-        return repoExampleRepository.findByProcessedFalse();
+    public List<? extends CodeRepo> findByProcessedFalse(String processType) {
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
+            return repoExampleRepository.findByProcessedFalse();
+        }
+        return repoMinedRepository.findByProcessedFalse();
     }
+
 
     public Page<RepoExample> findByUrlContainingIgnoreCase(String keyword, Pageable paging) {
         return repoExampleRepository.findByUrlContainingIgnoreCase(keyword, paging);
@@ -202,15 +207,15 @@ public class CodeRepoService {
 
     }
 
-    public RepoExample update(RepoExample repoExample, MainRepositoryDto mainRepositoryDto) {
+    public CodeRepo update(CodeRepo codeRepo, MainRepositoryDto mainRepositoryDto) {
         String repoCurrentUrl = mainRepositoryDto.getUrl();
         if(!StringUtils.isEmpty(repoCurrentUrl) &&
-                !repoCurrentUrl.equalsIgnoreCase(repoExample.getUrl())){
-            repoExample.setUrl(repoCurrentUrl);
-            repoExample.setName(getRepositoryNameFromUrl(repoCurrentUrl));
-            repoExample.setOwner(getOwnerFromUrl(repoCurrentUrl));
-            repoExampleRepository.save(repoExample);
+                !repoCurrentUrl.equalsIgnoreCase(codeRepo.getUrl())){
+            codeRepo.setUrl(repoCurrentUrl);
+            codeRepo.setName(getRepositoryNameFromUrl(repoCurrentUrl));
+            codeRepo.setOwner(getOwnerFromUrl(repoCurrentUrl));
+            save(codeRepo);
         }
-        return repoExample;
+        return codeRepo;
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pt.feup.ghmm.core.services.GitHubApiService;
+import pt.feup.ghmm.metrics.models.CodeRepoMetrics;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
@@ -52,12 +53,12 @@ class CodeRepoMetricsServiceTest {
 
     @Test
     void generateMetrics() throws ExecutionException, InterruptedException {
-        List<RepoExampleMetrics> repoExampleMetrics = codeRepoMetricsService.runMetricsExtraction(null, null).get();
-        assertEquals(repoExampleMetrics.size(), 0);
+        List<CodeRepoMetrics> codeRepoMetrics = codeRepoMetricsService.runMetricsExtraction(null, null).get();
+        assertEquals(codeRepoMetrics.size(), 0);
 
         List<RepoExample> repoExamples = new ArrayList<>();
-        repoExampleMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
-        assertEquals(repoExampleMetrics.size(), 0);
+        codeRepoMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
+        assertEquals(codeRepoMetrics.size(), 0);
 
         RepoExample repoExample = RepoExample.builder()
                 .owner("zammad")
@@ -66,14 +67,13 @@ class CodeRepoMetricsServiceTest {
                 .build();
         repoExamples.add(repoExample);
 
-        repoExampleMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder()
+        codeRepoMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder()
                 .running(true)
                 .processType("Metrics")
                 .build(), repoExamples).get();
-        assertEquals(repoExampleMetrics.size(), 1);
+        assertEquals(codeRepoMetrics.size(), 1);
 
-        RepoExampleMetrics metrics = repoExampleMetrics.get(0);
-        assertNotNull(metrics.getRepoExample());
+        CodeRepoMetrics metrics = codeRepoMetrics.get(0);
         assertNotNull(metrics.getDefaultBranch());
         assertNotEquals(0, metrics.getSize());
         assertNotEquals(0, metrics.getAllContentsNumber());

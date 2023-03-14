@@ -4968,3 +4968,6 @@ org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
 	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-03-14 11:41:24 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "REPO_MINED" not found; SQL statement:
+SELECT * FROM REPO_MINED [42102-214]

@@ -15,6 +15,9 @@ import pt.feup.ghmm.metrics.services.CodeRepoService;
 
 import java.util.List;
 
+import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
+import static pt.feup.ghmm.core.utils.Constants.MINED_PROCESS_TYPE;
+
 @Controller
 @RequestMapping("/metrics")
 public class MetricsController {
@@ -76,8 +79,8 @@ public class MetricsController {
     @ResponseBody
     public String startMetricsGeneration(){
         if(processExecution == null || !processExecution.isRunning()){
-            processExecution = codeRepoMetricsService.createProcessExecution("example");
-            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
+            processExecution = codeRepoMetricsService.createProcessExecution(EXAMPLE_PROCESS_TYPE);
+            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse(EXAMPLE_PROCESS_TYPE));
             return "started";
         }
         return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type " + processExecution.getProcessType() + " in execution.";
@@ -87,8 +90,8 @@ public class MetricsController {
     @ResponseBody
     public String startMinedMetricsGeneration(){
         if(processExecution == null || !processExecution.isRunning()){
-            processExecution = codeRepoMetricsService.createProcessExecution("mined");
-            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
+            processExecution = codeRepoMetricsService.createProcessExecution(MINED_PROCESS_TYPE);
+            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse(MINED_PROCESS_TYPE));
             return "started";
         }
         return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type" + processExecution.getProcessType() + " in execution.";

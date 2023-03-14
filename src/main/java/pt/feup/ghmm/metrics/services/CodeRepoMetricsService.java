@@ -15,16 +15,15 @@ import pt.feup.ghmm.core.services.GitHubApiService;
 import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.RepoMetricsDto;
 import pt.feup.ghmm.metrics.enums.ServiceType;
-import pt.feup.ghmm.metrics.models.Language;
-import pt.feup.ghmm.metrics.models.ProcessExecution;
-import pt.feup.ghmm.metrics.models.RepoExample;
-import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
+import pt.feup.ghmm.metrics.models.*;
 import pt.feup.ghmm.metrics.repositories.ProcessExecutionRepository;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 import pt.feup.ghmm.metrics.repositories.RepoMinedMetricsRepository;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
+import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
 
 @AllArgsConstructor
 @Service
@@ -53,111 +52,148 @@ public class CodeRepoMetricsService {
     }
 
     @Async
-    public CompletableFuture<List<RepoExampleMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<RepoExample> repoExamples){
-        if(CollectionUtils.isEmpty(repoExamples)){
+    public CompletableFuture<List<CodeRepoMetrics>> runMetricsExtraction(ProcessExecution processExecution, List<? extends CodeRepo> codeRepos){
+        if(CollectionUtils.isEmpty(codeRepos)){
             saveProcessExecution(processExecution, 0, 0, "Execution interrupted: nothing to process.", false, false);
-            executeMetricsOperations();
+            executeMetricsOperations(processExecution.getProcessType());
             return CompletableFuture.completedFuture(new ArrayList<>());
         }
-        saveProcessExecution(processExecution, repoExamples.size(), 0, "Starting execution.", true, false);
-        List<RepoExampleMetrics> metrics = new ArrayList<>();
+        saveProcessExecution(processExecution, codeRepos.size(), 0, "Starting execution.", true, false);
+        List<CodeRepoMetrics> metrics = new ArrayList<>();
         try {
-            for(int i = 0; i < repoExamples.size(); i++){
-                RepoExample repoExample = repoExamples.get(i);
-                RepoExampleMetrics repoMetrics = fetchMetrics(repoExample);
-                saveStatusRepoExampleMetrics(repoMetrics, metrics, repoExample);
-                saveProcessExecution(processExecution, repoExamples.size(), i+1, "Progressing execution.", true, false);
+            for(int i = 0; i < codeRepos.size(); i++){
+                CodeRepo codeRepo = codeRepos.get(i);
+                CodeRepoMetrics codeRepoMetrics = fetchMetrics(codeRepo);
+                saveStatusRepoExampleMetrics(codeRepoMetrics, metrics, codeRepo);
+                saveProcessExecution(processExecution, codeRepos.size(), i+1, "Progressing execution.", true, false);
             }
-            executeMetricsOperations();
-            saveProcessExecution(processExecution, repoExamples.size(), 0, "Finished execution successfully.", false, false);
+            executeMetricsOperations(processExecution.getProcessType());
+            saveProcessExecution(processExecution, codeRepos.size(), 0, "Finished execution successfully.", false, false);
         } catch (HttpClientErrorException.Forbidden exception){
-            saveProcessExecution(processExecution, repoExamples.size(), 0, "Execution interrupted due to Git Rest API client error.", false, true);
+            saveProcessExecution(processExecution, codeRepos.size(), 0, "Execution interrupted due to Git Rest API client error.", false, true);
         }
         return CompletableFuture.completedFuture(metrics);
     }
 
-    private void executeMetricsOperations() {
-        cleanUpMetrics();
-        computeServicesCount();
-        metricsDerivationService.runMetricsDerivation();
+    private void executeMetricsOperations(String processType) {
+        cleanUpMetrics(processType);
+        computeServicesCount(processType);
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
+            metricsDerivationService.runMetricsDerivationForRepoExamples();
+        }
+        metricsDerivationService.calculateMetricsScores(processType);
     }
 
-    private void cleanUpMetrics() {
-        List<RepoExampleMetrics> metricsList = repoExampleMetricsRepository.findAllMissProcessedMetrics();
-        if(CollectionUtils.isEmpty(metricsList)) return;
-        logger.info("cleanUpMetrics removing " + metricsList.size() + " miss processed metrics!");
-        repoExampleMetricsRepository.deleteAll(metricsList);
-    }
-
-
-    private void computeServicesCount() {
-        List<RepoExampleMetrics> repoExampleMetricsList = repoExampleMetricsRepository.findAll();
-        for(RepoExampleMetrics repoExampleMetrics: repoExampleMetricsList){
-            Set<pt.feup.ghmm.metrics.models.Service> services = repoExampleMetrics.getServices();
-            services = serviceService.updateType(services);
-            long programmingLanguagesCount = getProgrammingLanguagesCount(repoExampleMetrics.getLanguages());
-            long databaseServices = getDatabaseServices(services, repoExampleMetrics.isDatabaseConnection());
-            long messagingServices = getMessagingServices(services, repoExampleMetrics.isMessaging());
-            long logServices = getLogsServices(services, repoExampleMetrics.isLogsService());
-            repoExampleMetrics.setProgrammingLanguages(programmingLanguagesCount);
-            repoExampleMetrics.setDatabaseServices(databaseServices);
-            repoExampleMetrics.setMessagingServices(messagingServices);
-            repoExampleMetrics.setLogServices(logServices);
-            RepoExample repoExample = repoExampleMetrics.getRepoExample();
-            if(repoExample.isMicroservice() &&
-                    programmingLanguagesCount > 1 && databaseServices > 1){
-                repoExample.setMicroserviceSet(true);
-            }else {
-                repoExample.setMicroserviceSet(false);
-            }
-            updateDatabaseFlag(repoExampleMetrics, databaseServices);
-            updateMessagingFlag(repoExampleMetrics, messagingServices);
-            updateLogsFlag(repoExampleMetrics, logServices);
-            codeRepoService.save(repoExample);
-            repoExampleMetricsRepository.save(repoExampleMetrics);
+    private void cleanUpMetrics(String processType) {
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
+            List<RepoExampleMetrics> metricsList = repoExampleMetricsRepository.findAllMissProcessedMetrics();
+            if(CollectionUtils.isEmpty(metricsList)) return;
+            logger.info("cleanUpMetrics removing " + metricsList.size() + " miss processed metrics!");
+            repoExampleMetricsRepository.deleteAll(metricsList);
+        } else {
+            List<RepoMinedMetrics> metricsList  = repoMinedMetricsRepository.findAllMissProcessedMetrics();
+            if(CollectionUtils.isEmpty(metricsList)) return;
+            logger.info("cleanUpMetrics removing " + metricsList.size() + " miss processed metrics!");
+            repoMinedMetricsRepository.deleteAll(metricsList);
         }
     }
 
-    private void updateLogsFlag(RepoExampleMetrics metrics, long logServices) {
+
+    private void computeServicesCount(String processType) {
+        List<? extends CodeRepoMetrics> repoExampleMetricsList;
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
+            repoExampleMetricsList = repoExampleMetricsRepository.findAll();
+        }else {
+            repoExampleMetricsList = repoMinedMetricsRepository.findAll();
+        }
+        for(CodeRepoMetrics codeRepoMetrics: repoExampleMetricsList){
+            Set<pt.feup.ghmm.metrics.models.Service> services = codeRepoMetrics.getServices();
+            services = serviceService.updateType(services);
+            long programmingLanguagesCount = getProgrammingLanguagesCount(codeRepoMetrics.getLanguages());
+            long databaseServices = getDatabaseServices(services, codeRepoMetrics.isDatabaseConnection());
+            long messagingServices = getMessagingServices(services, codeRepoMetrics.isMessaging());
+            long logServices = getLogsServices(services, codeRepoMetrics.isLogsService());
+            codeRepoMetrics.setProgrammingLanguages(programmingLanguagesCount);
+            codeRepoMetrics.setDatabaseServices(databaseServices);
+            codeRepoMetrics.setMessagingServices(messagingServices);
+            codeRepoMetrics.setLogServices(logServices);
+            if(codeRepoMetrics instanceof RepoExampleMetrics exampleMetrics){
+                RepoExample repoExample = exampleMetrics.getRepoExample();
+                if(repoExample.isMicroservice() &&
+                        programmingLanguagesCount > 1 && databaseServices > 1){
+                    repoExample.setMicroserviceSet(true);
+                }else {
+                    repoExample.setMicroserviceSet(false);
+                }
+                codeRepoService.save(repoExample);
+            }
+            updateDatabaseFlag(codeRepoMetrics, databaseServices);
+            updateMessagingFlag(codeRepoMetrics, messagingServices);
+            updateLogsFlag(codeRepoMetrics, logServices);
+            save(codeRepoMetrics);
+        }
+    }
+
+    private void updateLogsFlag(CodeRepoMetrics metrics, long logServices) {
         if(logServices > 0 && !metrics.isLogsService()){
             metrics.setLogsService(true);
         }
     }
 
-    private void updateMessagingFlag(RepoExampleMetrics metrics, long messagingServices) {
+    private void updateMessagingFlag(CodeRepoMetrics metrics, long messagingServices) {
         if(messagingServices > 0 && !metrics.isMessaging()){
             metrics.setMessaging(true);
         }
     }
 
-    private void updateDatabaseFlag(RepoExampleMetrics metrics, long databaseServices) {
+    private void updateDatabaseFlag(CodeRepoMetrics metrics, long databaseServices) {
         if(databaseServices > 0 && !metrics.isDatabaseConnection()){
             metrics.setDatabaseConnection(true);
         }
     }
 
-    private void saveStatusRepoExampleMetrics(RepoExampleMetrics repoMetrics, List<RepoExampleMetrics> metrics, RepoExample repoExample) {
+    private void saveStatusRepoExampleMetrics(CodeRepoMetrics codeRepoMetrics, List<CodeRepoMetrics> metrics, CodeRepo codeRepo) {
         try {
-            if (repoMetrics != null) {
-                removeOldMetrics(repoMetrics);
-                metrics.add(repoMetrics);
-                repoExampleMetricsRepository.save(repoMetrics);
-                repoExample.setProcessed(true);
-                codeRepoService.save(repoExample);
+            if (codeRepoMetrics != null) {
+                removeOldMetrics(codeRepoMetrics);
+                metrics.add(codeRepoMetrics);
+                save(codeRepoMetrics);
+                codeRepo.setProcessed(true);
+                codeRepoService.save(codeRepo);
             }
         } catch (Exception exception) {
-            logger.error("Error saving metrics por repo: " + repoExample.getUrl(), exception);
+            logger.error("Error saving metrics por repo: " + codeRepo.getUrl(), exception);
         }
     }
 
-    private void removeOldMetrics(RepoExampleMetrics repoMetrics) {
-        List<RepoExampleMetrics> existingMetrics = repoExampleMetricsRepository.findAllByRepoExampleId(repoMetrics.getRepoExample().getId());
-        if(CollectionUtils.isEmpty(existingMetrics)) return;
-        for(RepoExampleMetrics exampleMetric: existingMetrics){
-            exampleMetric.setRepoExample(null);
-            repoExampleMetricsRepository.save(exampleMetric);
-            repoExampleMetricsRepository.delete(exampleMetric);
+    private void save(CodeRepoMetrics codeRepoMetrics) {
+        if(codeRepoMetrics instanceof RepoExampleMetrics exampleMetrics){
+            repoExampleMetricsRepository.save(exampleMetrics);
+        } else {
+            repoMinedMetricsRepository.save((RepoMinedMetrics) codeRepoMetrics);
         }
+    }
+
+    private void removeOldMetrics(CodeRepoMetrics codeRepoMetrics) {
+        if(codeRepoMetrics instanceof RepoExampleMetrics exampleMetrics){
+            List<RepoExampleMetrics> existingMetrics = repoExampleMetricsRepository.findAllByRepoExampleId(exampleMetrics.getRepoExample().getId());
+            if(CollectionUtils.isEmpty(existingMetrics)) return;
+            for(RepoExampleMetrics exampleMetric: existingMetrics){
+                exampleMetric.setRepoExample(null);
+                repoExampleMetricsRepository.save(exampleMetric);
+                repoExampleMetricsRepository.delete(exampleMetric);
+            }
+        } else {
+            RepoMinedMetrics repoMinedMetrics = (RepoMinedMetrics) codeRepoMetrics;
+            List<RepoMinedMetrics> existingMetrics = repoMinedMetricsRepository.findAllByRepoMinedId(repoMinedMetrics.getRepoMined().getId());
+            if(CollectionUtils.isEmpty(existingMetrics)) return;
+            for(RepoMinedMetrics minedMetrics: existingMetrics){
+                minedMetrics.setRepoMined(null);
+                repoMinedMetricsRepository.save(minedMetrics);
+                repoMinedMetricsRepository.delete(minedMetrics);
+            }
+        }
+
     }
 
     private ProcessExecution saveProcessExecution(ProcessExecution processExecution, int totalItems, int processedItems, String message, boolean running, boolean error) {
@@ -182,58 +218,68 @@ public class CodeRepoMetricsService {
         return processExecution;
     }
 
-    private RepoExampleMetrics fetchMetrics(RepoExample repoExample) throws HttpClientErrorException.Forbidden{
+    private CodeRepoMetrics fetchMetrics(CodeRepo codeRepo) throws HttpClientErrorException.Forbidden{
         try {
-            MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(repoExample.getOwner(), repoExample.getName());
+            MainRepositoryDto mainRepositoryDto = gitHubApiService.getMainRepositoryData(codeRepo.getOwner(), codeRepo.getName());
             if(mainRepositoryDto == null) return null;
-            repoExample = codeRepoService.update(repoExample, mainRepositoryDto);
-            Set<Language> languages = getLanguages(repoExample);
+            codeRepo = codeRepoService.update(codeRepo, mainRepositoryDto);
+            Set<Language> languages = getLanguages(codeRepo);
             long programmingLanguagesCount = getProgrammingLanguagesCount(languages);
-            long dockerfiles = getDockerfiles(repoExample);
-            boolean databaseConnection = hasDatabaseConnection(repoExample);
-            Set<pt.feup.ghmm.metrics.models.Service> services = getServices(repoExample);
+            long dockerfiles = getDockerfiles(codeRepo);
+            boolean databaseConnection = hasDatabaseConnection(codeRepo);
+            Set<pt.feup.ghmm.metrics.models.Service> services = getServices(codeRepo);
             long databaseServices = getDatabaseServices(services, databaseConnection);
-            boolean messaging = hasMessaging(repoExample);
+            boolean messaging = hasMessaging(codeRepo);
             long messagingServices = getMessagingServices(services, messaging);
-            boolean logs = hasLogsService(repoExample);
+            boolean logs = hasLogsService(codeRepo);
             long logServices = getLogsServices(services, logs);
 
-            return RepoExampleMetrics.builder()
-                    .repoExample(repoExample)
-                    .size(mainRepositoryDto.getSize())
-                    .defaultBranch(mainRepositoryDto.getDefaultBranch())
-                    .defaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()))
-                    .languages(languages)
-                    .programmingLanguages(programmingLanguagesCount)
-                    .files(getFilesCount(repoExample, mainRepositoryDto.getDefaultBranch()))
-                    .allContentsNumber(getContentsNumber(repoExample, mainRepositoryDto.getDefaultBranch()))
-                    .microserviceMention(hasMicroserviceMention(repoExample))
-                    .databaseConnection(databaseConnection)
-                    .databaseServices(databaseServices)
-                    .dockerfile(isGreaterThanZero(dockerfiles))
-                    .dockerfiles(dockerfiles)
-                    .restful(hasRestful(repoExample))
-                    .soap(hasSoap(repoExample, mainRepositoryDto.getLanguage()))
-                    .messaging(messaging)
-                    .messagingServices(messagingServices)
-                    .logsService(logs)
-                    .logServices(logServices)
-                    .services(services)
-                    .build();
+            CodeRepoMetrics codeRepoMetrics = getCodeRepoMetricsInstance(codeRepo);
+            codeRepoMetrics.setSize(mainRepositoryDto.getSize());
+            codeRepoMetrics.setDefaultBranch(mainRepositoryDto.getDefaultBranch());
+            codeRepoMetrics.setDefaultLang(getOrCreateLanguage(mainRepositoryDto.getLanguage()));
+            codeRepoMetrics.setLanguages(languages);
+            codeRepoMetrics.setProgrammingLanguages(programmingLanguagesCount);
+            codeRepoMetrics.setFiles(getFilesCount(codeRepo, mainRepositoryDto.getDefaultBranch()));
+            codeRepoMetrics.setAllContentsNumber(getContentsNumber(codeRepo, mainRepositoryDto.getDefaultBranch()));
+            codeRepoMetrics.setMicroserviceMention(hasMicroserviceMention(codeRepo));
+            codeRepoMetrics.setDatabaseConnection(databaseConnection);
+            codeRepoMetrics.setDatabaseServices(databaseServices);
+            codeRepoMetrics.setDockerfile(isGreaterThanZero(dockerfiles));
+            codeRepoMetrics.setDockerfiles(dockerfiles);
+            codeRepoMetrics.setRestful(hasRestful(codeRepo));
+            codeRepoMetrics.setSoap(hasSoap(codeRepo, mainRepositoryDto.getLanguage()));
+            codeRepoMetrics.setMessaging(messaging);
+            codeRepoMetrics.setMessagingServices(messagingServices);
+            codeRepoMetrics.setLogsService(logs);
+            codeRepoMetrics.setLogServices(logServices);
+            codeRepoMetrics.setServices(services);
+            return codeRepoMetrics;
         } catch (HttpClientErrorException.Forbidden exception){
-            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
+            logger.error("Error processing repo: " + codeRepo.getUrl(), exception);
             throw exception;
         } catch (HttpClientErrorException.NotFound exception){
-            logger.error("Error processing repo: " + repoExample.getUrl(), exception);
-            repoExample.setProcessingError(true);
-            repoExample.setProcessed(true);
-            repoExample.setMessage(exception.getMessage());
-            codeRepoService.save(repoExample);
+            logger.error("Error processing repo: " + codeRepo.getUrl(), exception);
+            codeRepo.setProcessingError(true);
+            codeRepo.setProcessed(true);
+            codeRepo.setMessage(exception.getMessage());
+            codeRepoService.save(codeRepo);
         }
         catch (Exception exception){
-            logger.error("Error processing repo: " + repoExample.getUrl());
+            logger.error("Error processing repo: " + codeRepo.getUrl());
         }
         return null;
+    }
+
+    private CodeRepoMetrics getCodeRepoMetricsInstance(CodeRepo codeRepo) {
+        if(codeRepo instanceof RepoExample example){
+            return RepoExampleMetrics.builder()
+                    .repoExample(example)
+                    .build();
+        }
+        return RepoMinedMetrics.builder()
+                .repoMined((RepoMined) codeRepo)
+                .build();
     }
 
     private long getDatabaseServices(Set<pt.feup.ghmm.metrics.models.Service> services, boolean databaseConnection) {
@@ -251,31 +297,31 @@ public class CodeRepoMetricsService {
         return services.stream().filter(service -> ServiceType.LOGS.equals(service.getServiceType())).count();
     }
 
-    private Set<pt.feup.ghmm.metrics.models.Service> getServices(RepoExample repoExample) {
-        Map<String, ServiceDto> allServices = getAllServices(repoExample);
+    private Set<pt.feup.ghmm.metrics.models.Service> getServices(CodeRepo codeRepo) {
+        Map<String, ServiceDto> allServices = getAllServices(codeRepo);
         return getServiceListFromMap(allServices);
     }
 
-    private Map<String, ServiceDto> getAllServices(RepoExample repoExample) {
+    private Map<String, ServiceDto> getAllServices(CodeRepo codeRepo) {
         String queryFragment = "services:+language:YAML";
         Map<String, ServiceDto> allServices = new HashMap<>();
         try {
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             for(ItemDto itemDto: searchResultDto.getItems()){
                 if(itemDto.getPath().contains("{")) continue;
-                DockerComposeDto dockerComposeDto = gitHubApiService.getDockerComposeFileContent(repoExample.getOwner(), repoExample.getName(), itemDto.getPath());
+                DockerComposeDto dockerComposeDto = gitHubApiService.getDockerComposeFileContent(codeRepo.getOwner(), codeRepo.getName(), itemDto.getPath());
                 if(dockerComposeDto != null && !MapUtils.isEmpty(dockerComposeDto.getServices())){
                     allServices.putAll(dockerComposeDto.getServices());
                 }
             }
         } catch (Exception exception){
-            logger.error("exception found while trying to recover services for " + repoExample.getUrl(), exception);
+            logger.error("exception found while trying to recover services for " + codeRepo.getUrl(), exception);
         }
         return allServices;
     }
 
-    private Set<Language> getLanguages(RepoExample repoExample) {
-        HashMap<String, Integer> map = gitHubApiService.getLanguagesData(repoExample.getOwner(), repoExample.getName());
+    private Set<Language> getLanguages(CodeRepo codeRepo) {
+        HashMap<String, Integer> map = gitHubApiService.getLanguagesData(codeRepo.getOwner(), codeRepo.getName());
         return getLanguageListFromMap(map);
     }
 
@@ -305,8 +351,8 @@ public class CodeRepoMetricsService {
         return languageService.findOrCreateByName(lang);
     }
 
-    private long getFilesCount(RepoExample repoExample, String defaultBranch) {
-        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
+    private long getFilesCount(CodeRepo codeRepo, String defaultBranch) {
+        AllContentDto allContentDto = gitHubApiService.getAllContentsData(codeRepo.getOwner(), codeRepo.getName(), defaultBranch);
         int filesCount = 0;
         final String FILES_TYPE = "blob";
         if(!CollectionUtils.isEmpty(allContentDto.getTree())){
@@ -319,16 +365,16 @@ public class CodeRepoMetricsService {
         return filesCount;
     }
 
-    private long getContentsNumber(RepoExample repoExample, String defaultBranch) {
-        AllContentDto allContentDto = gitHubApiService.getAllContentsData(repoExample.getOwner(), repoExample.getName(), defaultBranch);
+    private long getContentsNumber(CodeRepo codeRepo, String defaultBranch) {
+        AllContentDto allContentDto = gitHubApiService.getAllContentsData(codeRepo.getOwner(), codeRepo.getName(), defaultBranch);
         return allContentDto != null && !CollectionUtils.isEmpty(allContentDto.getTree()) ? allContentDto.getTree().size() : 0;
     }
 
-    private boolean hasMicroserviceMention(RepoExample repoExample) {
+    private boolean hasMicroserviceMention(CodeRepo codeRepo) {
         List<String> queryFragments = Arrays.asList("microservice", "micro-service");
         for(String queryFragment: queryFragments){
-            if(repoExample.getName().contains(queryFragment)) return true;
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            if(codeRepo.getName().contains(queryFragment)) return true;
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return true;
             }
@@ -336,11 +382,11 @@ public class CodeRepoMetricsService {
         return false;
     }
 
-    private boolean hasDatabaseConnection(RepoExample repoExample) {
+    private boolean hasDatabaseConnection(CodeRepo codeRepo) {
         List<String> queryFragments = Arrays.asList("database", "language:sql", "oracle", "mysql", "SQL Server", "SQLite",
                 "postgres", "cassandra", "mongodb", "extension:db");
         for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return true;
             }
@@ -348,10 +394,10 @@ public class CodeRepoMetricsService {
         return false;
     }
 
-    private long getDockerfiles(RepoExample repoExample) {
+    private long getDockerfiles(CodeRepo codeRepo) {
         List<String> queryFragments = Arrays.asList("docker","language:Dockerfile","docker-compose", "language:Makefile");
         for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return searchResultDto.getTotalCount();
             }
@@ -363,10 +409,10 @@ public class CodeRepoMetricsService {
         return totalCount > 0;
     }
 
-    private boolean hasRestful(RepoExample repoExample) {
+    private boolean hasRestful(CodeRepo codeRepo) {
         List<String> queryFragments = Arrays.asList("http","https");
         for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return true;
             }
@@ -374,16 +420,16 @@ public class CodeRepoMetricsService {
         return false;
     }
 
-    private boolean hasSoap(RepoExample repoExample, String lang) {
+    private boolean hasSoap(CodeRepo codeRepo, String lang) {
         String queryFragment = "soap+language:" + lang;
-        SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+        SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
         return searchResultDto != null && searchResultDto.getTotalCount() > 0;
     }
 
-    private boolean hasMessaging(RepoExample repoExample) {
+    private boolean hasMessaging(CodeRepo codeRepo) {
         List<String> queryFragments = Arrays.asList("kafka", "RabbitMQ", "producer", "consumer", "amqp");
         for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return true;
             }
@@ -391,10 +437,10 @@ public class CodeRepoMetricsService {
         return false;
     }
 
-    private boolean hasLogsService(RepoExample repoExample) {
+    private boolean hasLogsService(CodeRepo codeRepo) {
         List<String> queryFragments = Arrays.asList("logstash", "Datadog", "Syslog-ng", "Rsyslog", "rsyslog", "Logagent", "Graylog", "Fluentd");
         for(String queryFragment: queryFragments){
-            SearchResultDto searchResultDto = gitHubApiService.searchRepository(repoExample.getOwner(), repoExample.getName(), queryFragment);
+            SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);
             if(searchResultDto.getTotalCount() > 0){
                 return true;
             }
