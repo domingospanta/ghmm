@@ -10,25 +10,28 @@ import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
-import pt.feup.ghmm.metrics.services.RepoExampleMetricsService;
-import pt.feup.ghmm.metrics.services.RepoExampleService;
+import pt.feup.ghmm.metrics.services.CodeRepoMetricsService;
+import pt.feup.ghmm.metrics.services.CodeRepoService;
 
 import java.util.List;
+
+import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
+import static pt.feup.ghmm.core.utils.Constants.MINED_PROCESS_TYPE;
 
 @Controller
 @RequestMapping("/metrics")
 public class MetricsController {
 
-    private RepoExampleMetricsService repoExampleMetricsService;
-    private RepoExampleService repoExampleService;
+    private CodeRepoMetricsService codeRepoMetricsService;
+    private CodeRepoService codeRepoService;
     private final String LIST_PAGE = "metricslist";
     private final String GENERATE_PAGE = "metricsgeneration";
     private final String STATISTICS_PAGE = "metricsstatistics";
     private ProcessExecution processExecution;
 
-    public MetricsController(RepoExampleMetricsService repoExampleMetricsService, RepoExampleService repoExampleService) {
-        this.repoExampleMetricsService = repoExampleMetricsService;
-        this.repoExampleService = repoExampleService;
+    public MetricsController(CodeRepoMetricsService codeRepoMetricsService, CodeRepoService codeRepoService) {
+        this.codeRepoMetricsService = codeRepoMetricsService;
+        this.codeRepoService = codeRepoService;
     }
 
     @GetMapping("/all")
@@ -42,9 +45,9 @@ public class MetricsController {
 
             Page<RepoExampleMetrics> pageTuts;
             if (keyword == null) {
-                pageTuts = repoExampleMetricsService.findAll(paging);
+                pageTuts = codeRepoMetricsService.findAll(paging);
             } else {
-                pageTuts = repoExampleMetricsService.findByRepoExamples(keyword, paging);
+                pageTuts = codeRepoMetricsService.findByRepoExamples(keyword, paging);
                 model.addAttribute("keyword", keyword);
             }
 
@@ -65,33 +68,45 @@ public class MetricsController {
     @GetMapping("/generation")
     public String getMetricsGenerationPage(Model model){
         model.addAttribute("processing", processExecution != null && processExecution.isRunning());
-        long processedWithoutErrorTotal = repoExampleService.countAllByProcessedTrueAndProcessingErrorFalse();
-        long processedWithErrorTotal = repoExampleService.countAllByProcessedTrueAndProcessingErrorTrue();
-        long unprocessed = repoExampleService.countAllByProcessedFalse();
-        model.addAttribute("examplesTotal", repoExampleService.countAll());
-        model.addAttribute("processedWithoutErrorTotal", processedWithoutErrorTotal);
-        model.addAttribute("processedWithErrorTotal", processedWithErrorTotal);
-        model.addAttribute("unprocessedTotal", unprocessed);
+
+        model.addAttribute("repoExampleMetrics", codeRepoMetricsService.getMetricsForCodeRepos(true));
+        model.addAttribute("minedRepoMetrics", codeRepoMetricsService.getMetricsForCodeRepos(false));
         return GENERATE_PAGE;
     }
 
-    @GetMapping("/generation/start")
+
+    @GetMapping("/example/start")
     @ResponseBody
     public String startMetricsGeneration(){
-        processExecution = repoExampleMetricsService.createProcessExecution();
-        repoExampleMetricsService.runMetricsExtraction(processExecution, repoExampleService.findByProcessedFalse());
-        return "started";
+        if(processExecution == null || !processExecution.isRunning()){
+            processExecution = codeRepoMetricsService.createProcessExecution(EXAMPLE_PROCESS_TYPE);
+            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse(EXAMPLE_PROCESS_TYPE));
+            return "started";
+        }
+        return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type " + processExecution.getProcessType() + " in execution.";
+    }
+
+    @GetMapping("/mined/start")
+    @ResponseBody
+    public String startMinedMetricsGeneration(){
+        if(processExecution == null || !processExecution.isRunning()){
+            processExecution = codeRepoMetricsService.createProcessExecution(MINED_PROCESS_TYPE);
+            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse(MINED_PROCESS_TYPE));
+            return "started";
+        }
+        return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type" + processExecution.getProcessType() + " in execution.";
     }
 
     @GetMapping("/generation/status")
     @ResponseBody
     public ProcessExecutionDto getMetricsGenerationStatus(){
         if(processExecution == null) return ProcessExecutionDto.builder().build();
-        processExecution = repoExampleMetricsService.getProcessExecutionById(processExecution.getId());
+        processExecution = codeRepoMetricsService.getProcessExecutionById(processExecution.getId());
         return ProcessExecutionDto.builder()
                 .message(processExecution.getMessage())
                 .running(processExecution.isRunning())
                 .processedItems(processExecution.getProcessedItems())
+                .type(processExecution.getProcessType())
                 .totalItems(processExecution.getTotalItems())
                 .error(processExecution.isError())
                 .build();
@@ -100,9 +115,9 @@ public class MetricsController {
 
     @GetMapping("/statistics")
     public String getMetricsStatisticsPage(Model model){
-        MetricsStatisticsDto metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics(true);
+        MetricsStatisticsDto metricsStatisticsDto = codeRepoMetricsService.getMetricsStatistics(true);
         model.addAttribute("msMetrics", metricsStatisticsDto);
-        metricsStatisticsDto = repoExampleMetricsService.getMetricsStatistics(false);
+        metricsStatisticsDto = codeRepoMetricsService.getMetricsStatistics(false);
         model.addAttribute("moMetrics", metricsStatisticsDto);
         return STATISTICS_PAGE;
     }

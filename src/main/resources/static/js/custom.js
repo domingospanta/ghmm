@@ -65,24 +65,31 @@ function changePageSize() {
   $("#searchForm").submit();
 }
 
-function startMetricsGeneration() {
-  $("#generationButtonSpinner").show();
-  $("#generationButtonLabel").text("Loading...");
-
-  metricsGenerationRequest();
+function startMetricsGeneration(type) {
+  $("#" + type + 'Spinner').show();
+  $("#" + type + 'Label').text("Loading...");
+  metricsGenerationRequest(type);
 }
 var timer;
-function metricsGenerationRequest() {
+function metricsGenerationRequest(type) {
   $.ajax({
-    url: "/metrics/generation/start",
+    url: "/metrics/"+ type + "/start",
     success:
-        function (data) {
-         console.log("data: " + data);
-        },
-    complete: function () {
-      // Schedule the next request when the current one's complete
-      timer = setInterval(metricsStatusRequest, 5000); // The interval set to 5 seconds
-    }
+        function (result) {
+         console.log("result: " + result);
+         if(result === 'started'){
+           timer = setInterval(metricsStatusRequest, 5000);
+         } else {
+           $("#" + type + 'Spinner').hide();
+           $("#" + type + 'Label').text("Start");
+           let processResultDiv = $("#" + type + "ProcessResultDiv");
+           let processResultMessage = $("#" + type + "ProcessResultMessage");
+           processResultDiv.removeClass("alert-success");
+           processResultDiv.addClass("alert-danger");
+           processResultMessage.text(result);
+           processResultDiv.show();
+         }
+        }
   });
 }
 
@@ -93,23 +100,29 @@ function metricsStatusRequest() {
         function (processExecution) {
           console.log("status data:" + processExecution);
           if(!!processExecution && processExecution.running === false){
-            $("#generationButton").attr('value', "Start");
-            $("#generationButtonSpinner").hide();
-            $("#generationButtonLabel").text("Start");
+            let button = $("#" + processExecution.type + "Button");
+            let spinner = $("#" + processExecution.type + "Spinner");
+            let label =$("#" + processExecution.type + "Label");
+            let processResultDiv = $("#" + processExecution.type + "ProcessResultDiv");
+            let processResultMessage = $("#" + processExecution.type + "ProcessResultMessage");
+            button.attr('value', "Start");
+            spinner.hide();
+            label.text("Start");
             clearInterval(timer);
             if(processExecution.error === true){
-              $("#processResultDiv").removeClass("alert-success");
-              $("#processResultDiv").addClass("alert-danger");
+              processResultDiv.removeClass("alert-success");
+              processResultDiv.addClass("alert-danger");
             } else {
-              $("#processResultDiv").removeClass("alert-danger");
-              $("#processResultDiv").addClass("alert-success");
+              processResultDiv.removeClass("alert-danger");
+              processResultDiv.addClass("alert-success");
             }
-            $("#processResultMessage").text(processExecution.message);
-            $("#processResultDiv").show();
+            processResultMessage.text(processExecution.message);
+            processResultDiv.show();
           } else {
-            $("#unprocessedMetrics").text(processExecution.processedItems + "/" + processExecution.totalItems);
-            let bar = document.querySelector(".progress-bar");
-            bar.style.width = ((processExecution.processedItems/processExecution.totalItems) * 100) + "%";
+            let unprocessedMetrics = $("#" +  processExecution.type + "UnprocessedMetrics");
+            let progressbar = $("#" +  processExecution.type + "ProgressBar");
+            unprocessedMetrics.text(processExecution.processedItems + "/" + processExecution.totalItems);
+            progressbar.width((processExecution.processedItems/processExecution.totalItems) * 100);
           }
         }
   });

@@ -20,4 +20,6 @@ public class ProcessExecutionDto {
     private boolean error;
 
     private String message;
+
+    private String type;
 }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html layout:decorate="~{page}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>Listing</title>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div class="pagetitle">
+        <h1>List of Mined Code Repositories</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                <li class="breadcrumb-item">Corpus</li>
+                <li class="breadcrumb-item active">Mined Repos</li>
+            </ol>
+        </nav>
+    </div><!-- End Page Title -->
+
+    <div class="card">
+        <div class="card-body table-responsive">
+            <div th:replace="~{fragments/searchBar :: searchBar('/repo/mined/all')}"> </div>
+            <div class="container">
+                <label>[[${totalItems}]] result(s)</label>
+
+                <div th:if="${result != null}">
+                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                </div>
+            </div>
+            <!-- Table with stripped rows -->
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">Id</th>
+                    <th scope="col">Owner</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">URL</th>
+                    <th scope="col">Classification</th>
+                    <th scope="col">Processed?</th>
+                    <th scope="col">Error?</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr th:each="repo : ${minedRepos}">
+                    <td>
+                        <a th:href="@{'/repo/mined/delete/' + ${repo.id}}" id="btnDelete"
+                           title="Delete this tutorial" class="fa-regular fa-trash-can icon-dark btn-delete">
+                            <i class="bi bi-archive-fill"></i>
+                        </a>
+                    </td>
+
+                    <th scope="row">[[${repo.id}]]</th>
+                    <td>[[${repo.owner}]]</td>
+                    <td>[[${repo.appName}]]</td>
+                    <td>
+                        <a th:href="@{${repo.url}}" target="_blank">[[${repo.url}]]</a>
+                    </td>
+                    <td>[[${repo.classification}]]</td>
+                    <td>[[${repo.processed}]]</td>
+                    <td th:attr="class=${repo.processingError == true ? 'table-danger' : 'table-success'}">
+                        [[${repo.processingError}]]
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <!-- End Table with stripped rows -->
+
+
+            <nav aria-label="Pagination" th:if="${totalPages > 0}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/repo/mine/all', 1, '<<', 'First Page')"></a>
+                    </li>
+                    <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${currentPage - 1}, 'Prev', 'Previous Page')"></a>
+                    </li>
+                    <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                    <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
+                        th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
+                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${page}, ${page}, 'Page ' + ${page})"></a>
+                    </li>
+                    <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                    <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${currentPage + 1},'Next', 'Next Page')"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
+                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${totalPages}, '>>', 'Last Page')"></a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

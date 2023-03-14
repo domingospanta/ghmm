@@ -9,10 +9,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pt.feup.ghmm.core.services.GitHubApiService;
+import pt.feup.ghmm.metrics.models.CodeRepoMetrics;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
-import pt.feup.ghmm.metrics.models.Service;
 import pt.feup.ghmm.metrics.repositories.ProcessExecutionRepository;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 
@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureWebClient
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {RepoExampleMetricsService.class, GitHubApiService.class})
-class RepoExampleMetricsServiceTest {
+@ContextConfiguration(classes = {CodeRepoMetricsService.class, GitHubApiService.class})
+class CodeRepoMetricsServiceTest {
 
     @MockBean
     private RepoExampleMetricsRepository repository;
@@ -34,7 +34,7 @@ class RepoExampleMetricsServiceTest {
     private LanguageService languageService;
 
     @MockBean
-    private RepoExampleService repoExampleService;
+    private CodeRepoService codeRepoService;
 
     @MockBean
     ProcessExecutionRepository processExecutionRepository;
@@ -49,16 +49,16 @@ class RepoExampleMetricsServiceTest {
     private GitHubApiService gitHubApiService;
 
     @Autowired
-    private RepoExampleMetricsService repoExampleMetricsService;
+    private CodeRepoMetricsService codeRepoMetricsService;
 
     @Test
     void generateMetrics() throws ExecutionException, InterruptedException {
-        List<RepoExampleMetrics> repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(null, null).get();
-        assertEquals(repoExampleMetrics.size(), 0);
+        List<CodeRepoMetrics> codeRepoMetrics = codeRepoMetricsService.runMetricsExtraction(null, null).get();
+        assertEquals(codeRepoMetrics.size(), 0);
 
         List<RepoExample> repoExamples = new ArrayList<>();
-        repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
-        assertEquals(repoExampleMetrics.size(), 0);
+        codeRepoMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder().build(), repoExamples).get();
+        assertEquals(codeRepoMetrics.size(), 0);
 
         RepoExample repoExample = RepoExample.builder()
                 .owner("zammad")
@@ -67,14 +67,13 @@ class RepoExampleMetricsServiceTest {
                 .build();
         repoExamples.add(repoExample);
 
-        repoExampleMetrics = repoExampleMetricsService.runMetricsExtraction(ProcessExecution.builder()
+        codeRepoMetrics = codeRepoMetricsService.runMetricsExtraction(ProcessExecution.builder()
                 .running(true)
                 .processType("Metrics")
                 .build(), repoExamples).get();
-        assertEquals(repoExampleMetrics.size(), 1);
+        assertEquals(codeRepoMetrics.size(), 1);
 
-        RepoExampleMetrics metrics = repoExampleMetrics.get(0);
-        assertNotNull(metrics.getRepoExample());
+        CodeRepoMetrics metrics = codeRepoMetrics.get(0);
         assertNotNull(metrics.getDefaultBranch());
         assertNotEquals(0, metrics.getSize());
         assertNotEquals(0, metrics.getAllContentsNumber());

@@ -25,30 +25,22 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-            <a class="nav-link " href="/">
-                <i class="bi bi-grid"></i>
-                <span>Corpus</span>
-            </a>
-        </li><!-- End Dashboard Nav -->
-
-        <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-table"></i></i><span>Repo Examples</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="/repo/examples/all">
-                        <i class="bi bi-circle"></i><span>List</span>
-                    </a>
-                </li>
-                <li>
                     <a href="/repo/examples/upload">
                         <i class="bi bi-circle"></i><span>Add/Upload</span>
                     </a>
                 </li>
+                <li>
+                    <a href="/repo/examples/all">
+                        <i class="bi bi-circle"></i><span>List</span>
+                    </a>
+                </li>
             </ul>
-        </li><!-- End Components Nav -->
-
+        </li>
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-file-bar-graph"></i><span>Metrics</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -62,24 +54,36 @@
                         <i class="bi bi-circle"></i><span>Generation</span>
                     </a>
                     <a href="/metrics/statistics">
-                        <i class="bi bi-circle"></i><span>Statistics</span>
+                        <i class="bi bi-circle"></i><span>Repo Example Statistics</span>
                     </a>
                 </li>
             </ul>
-        </li><!-- End Forms Nav -->
-
+        </li>
         <li class="nav-item">
             <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
                 <i class="bi bi-sort-down"></i></i><span>Identification</span><i class="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
                 <li>
-                    <a href="tables-general.html">
-                        <i class="bi bi-circle"></i><span>Method</span>
+                    <a href="/repo/mined/upload">
+                        <i class="bi bi-circle"></i><span>Search/Upload</span>
                     </a>
                 </li>
             </ul>
-        </li><!-- End Tables Nav -->
+        </li>
+        <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#corpus-nav" data-bs-toggle="collapse" href="#">
+                <i class="bi bi-grid"></i>
+                <span>Corpus</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="corpus-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                <li>
+                    <a href="/repo/mined/all">
+                        <i class="bi bi-circle"></i><span>Mined Repos</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
     </ul>
 
 </aside><!-- End Sidebar-->

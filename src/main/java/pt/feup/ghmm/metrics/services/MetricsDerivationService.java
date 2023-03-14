@@ -2,50 +2,52 @@ package pt.feup.ghmm.metrics.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import pt.feup.ghmm.metrics.models.Language;
-import pt.feup.ghmm.metrics.models.RepoExample;
-import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
-import pt.feup.ghmm.metrics.models.Threshold;
+import pt.feup.ghmm.metrics.models.*;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
+import pt.feup.ghmm.metrics.repositories.RepoMinedMetricsRepository;
 
 import java.util.*;
+
+import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
+import static pt.feup.ghmm.core.utils.Constants.MS_CLASSIFICATION_SCORE;
 
 @AllArgsConstructor
 @Service
 public class MetricsDerivationService {
 
-    private RepoExampleMetricsRepository repository;
+    private RepoExampleMetricsRepository repoExampleMetricsRepository;
+
+    private RepoMinedMetricsRepository repoMinedMetricsRepository;
 
     private ThresholdService thresholdService;
 
-    private RepoExampleRepository repoExampleRepository;
+    private CodeRepoService codeRepoService;
 
     private final String SIZE = "size";
     private final String FILES = "files";
     private final String ALL_CONTENTS = "allContents";
 
-    public void runMetricsDerivation() {
-        runMetricsDerivation(true, true);
-        runMetricsDerivation(true, false);
-        runMetricsDerivation(false, false);
-        calculateRepoMetricsScores();
+    public void runMetricsDerivationForRepoExamples() {
+        runMetricsDerivationForRepoExamples(true, true);
+        runMetricsDerivationForRepoExamples(true, false);
+        runMetricsDerivationForRepoExamples(false, false);
     }
 
-    private void runMetricsDerivation(boolean microservice, boolean microserviceSet) {
-        List<RepoExampleMetrics> metrics = repository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderBySizeAsc(microservice, microserviceSet);
+    private void runMetricsDerivationForRepoExamples(boolean microservice, boolean microserviceSet) {
+        List<RepoExampleMetrics> metrics = repoExampleMetricsRepository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderBySizeAsc(microservice, microserviceSet);
         double sizeTotal = metrics.stream().map(RepoExampleMetrics::getSize).reduce(0L, Long::sum);
         runSystemAggregationForWeightNormalization(metrics, SIZE, sizeTotal);
         runWeightRatioAggregation(metrics, SIZE);
         runThresholdDerivation(metrics, SIZE, microservice, microserviceSet);
 
-        metrics = repository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByFilesAsc(microservice, microserviceSet);
+        metrics = repoExampleMetricsRepository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByFilesAsc(microservice, microserviceSet);
         double filesTotal = metrics.stream().map(RepoExampleMetrics::getFiles).reduce(0L, Long::sum);
         runSystemAggregationForWeightNormalization(metrics, FILES, filesTotal);
         runWeightRatioAggregation(metrics, FILES);
         runThresholdDerivation(metrics, FILES, microservice, microserviceSet);
 
-        metrics = repository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByAllContentsNumberAsc(microservice, microserviceSet);
+        metrics = repoExampleMetricsRepository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByAllContentsNumberAsc(microservice, microserviceSet);
         double filesAllContents = metrics.stream().map(RepoExampleMetrics::getAllContentsNumber).reduce(0L, Long::sum);
         runSystemAggregationForWeightNormalization(metrics, ALL_CONTENTS, filesAllContents);
         runWeightRatioAggregation(metrics, ALL_CONTENTS);
@@ -66,7 +68,7 @@ public class MetricsDerivationService {
                     metric.setAllContentsNumberWeight(allContentsWeight);
             }
         }
-        repository.saveAll(metrics);
+        repoExampleMetricsRepository.saveAll(metrics);
     }
 
     private void runWeightRatioAggregation(List<RepoExampleMetrics> metrics, String attribute) {
@@ -84,7 +86,7 @@ public class MetricsDerivationService {
                     metric.setAllContentsAggregatedNumberWeight(aggregatedWeight);
             }
         }
-        repository.saveAll(metrics);
+        repoExampleMetricsRepository.saveAll(metrics);
     }
 
     private void runThresholdDerivation(List<RepoExampleMetrics> metrics, String attribute, boolean microservice, boolean microserviceSet) {
@@ -113,30 +115,38 @@ public class MetricsDerivationService {
         return value  < MAX_LOW_RISK_CLASSIFICATION;
     }
 
-    private void calculateRepoMetricsScores() {
-        List<RepoExampleMetrics> repoExampleMetricsList = repository.findAll();
-        for(RepoExampleMetrics metrics: repoExampleMetricsList){
-            RepoExample repoExample = metrics.getRepoExample();
-            double score = calculateScore(metrics);
-            repoExample.setScore(score);
-            if (score > 7.0){
-                if(metrics.getProgrammingLanguages() > 1 && metrics.getDatabaseServices() > 1){
-                    repoExample.setClassification("MICROSERVICE_SET");
-                } else if(metrics.getProgrammingLanguages() > 1 && hasFrontendLanguages(metrics.getLanguages())){
-                    repoExample.setScore(repoExample.getScore() - 1);
-                    if(repoExample.getScore() > 7.0) {
-                        repoExample.setClassification("MICROSERVICE");
-                    } else {
-                        repoExample.setClassification("MONOLITH");
-                    }
+    public void calculateMetricsScores(String processType) {
+        List<? extends CodeRepoMetrics> repoExampleMetricsList;
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
+            repoExampleMetricsList = repoExampleMetricsRepository.findAll();
+        } else {
+            repoExampleMetricsList = repoMinedMetricsRepository.findAll();
+        }
+        for(CodeRepoMetrics metrics: repoExampleMetricsList){
+            CodeRepo codeRepo;
+            if(metrics instanceof RepoExampleMetrics exampleMetrics){
+                codeRepo = exampleMetrics.getRepoExample();
+            } else {
+                codeRepo = ((RepoMinedMetrics)metrics).getRepoMined();
+            }
+            boolean hasMsSetIndicator = metrics.getProgrammingLanguages() > 1 && metrics.getDatabaseServices() > 1;
+            boolean hasMonolithIndicator = metrics.getProgrammingLanguages() > 1 && hasFrontendLanguages(metrics.getLanguages());
+            double score = calculateScore(metrics, hasMsSetIndicator);
+            codeRepo.setScore(score);
+            if (score > MS_CLASSIFICATION_SCORE){
+                if(hasMsSetIndicator){
+                    codeRepo.setClassification("MICROSERVICE_SET");
+                } else if(hasMonolithIndicator){
+                    codeRepo.setScore(codeRepo.getScore() - 2);
+                    codeRepo.setClassification("MONOLITH");
                 }
                 else {
-                    repoExample.setClassification("MICROSERVICE");
+                    codeRepo.setClassification("MICROSERVICE");
                 }
             } else {
-                repoExample.setClassification("MONOLITH");
+                codeRepo.setClassification("MONOLITH");
             }
-            repoExampleRepository.save(repoExample);
+            codeRepoService.save(codeRepo);
         }
     }
 
@@ -149,19 +159,18 @@ public class MetricsDerivationService {
         return false;
     }
 
-    private double calculateScore(RepoExampleMetrics repoExampleMetrics) {
+    private double calculateScore(CodeRepoMetrics codeRepoMetrics, boolean hasMsSetIndicator) {
         double score = 0;
-        boolean msSet = repoExampleMetrics.getRepoExample().isMicroserviceSet();
-        score += getNumericalScore(repoExampleMetrics.getSize(), thresholdService.findByMetric(SIZE, msSet).getThresholdValue());
-        score += getNumericalScore(repoExampleMetrics.getFiles(), thresholdService.findByMetric(FILES, msSet).getThresholdValue());
-        score += getNumericalScore(repoExampleMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS, msSet).getThresholdValue());
-        score += getBooleanScore(repoExampleMetrics.isDockerfile());
-        score += getBooleanScore(repoExampleMetrics.isLogsService());
-        score += getBooleanScore(repoExampleMetrics.isDatabaseConnection());
-        score += getBooleanScore(repoExampleMetrics.isMessaging());
-        score += getBooleanScore(repoExampleMetrics.isRestful());
-        score += getBooleanScore(repoExampleMetrics.isMicroserviceMention());
-        score += getBooleanScore(!repoExampleMetrics.isSoap());
+        score += getNumericalScore(codeRepoMetrics.getSize(), thresholdService.findByMetric(SIZE, hasMsSetIndicator).getThresholdValue());
+        score += getNumericalScore(codeRepoMetrics.getFiles(), thresholdService.findByMetric(FILES, hasMsSetIndicator).getThresholdValue());
+        score += getNumericalScore(codeRepoMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS, hasMsSetIndicator).getThresholdValue());
+        score += getBooleanScore(codeRepoMetrics.isDockerfile());
+        score += getBooleanScore(codeRepoMetrics.isLogsService());
+        score += getBooleanScore(codeRepoMetrics.isDatabaseConnection());
+        score += getBooleanScore(codeRepoMetrics.isMessaging());
+        score += getBooleanScore(codeRepoMetrics.isRestful());
+        score += getBooleanScore(codeRepoMetrics.isMicroserviceMention());
+        score += getBooleanScore(!codeRepoMetrics.isSoap());
         return score;
     }
 

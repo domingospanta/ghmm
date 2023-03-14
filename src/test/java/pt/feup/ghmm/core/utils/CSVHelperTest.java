@@ -2,6 +2,7 @@ package pt.feup.ghmm.core.utils;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
+import pt.feup.ghmm.metrics.models.CodeRepo;
 import pt.feup.ghmm.metrics.models.RepoExample;
 
 import java.io.IOException;
@@ -26,21 +27,21 @@ class CSVHelperTest {
     @Test
     void csvToRepoExamples() throws IOException {
 
-        List<RepoExample> repoExamples = CSVHelper.csvToRepoExamples(null);
+        List<CodeRepo> repoExamples = CSVHelper.csvToCodeRepos(null, true);
         assertEquals( 0, repoExamples.size());
 
         MockMultipartFile file = new MockMultipartFile("test.json", "", "text/csv", ("" +
                 "owner,name,url,microservice\n" +
                 ",robot-shop,https://github.com/instana/robot-shop,TRUE").getBytes());
 
-        repoExamples = CSVHelper.csvToRepoExamples(file.getInputStream());
+        repoExamples = CSVHelper.csvToCodeRepos(file.getInputStream(), true);
         assertEquals( 1, repoExamples.size());
 
-        RepoExample repoExample = repoExamples.get(0);
+        CodeRepo repoExample = repoExamples.get(0);
         assertEquals( "instana", repoExample.getOwner());
         assertEquals( "robot-shop", repoExample.getName());
         assertEquals( "https://github.com/instana/robot-shop", repoExample.getUrl());
-        assertTrue( repoExample.isMicroservice());
+        assertTrue(((RepoExample)repoExample).isMicroservice());
     }
 
     @Test

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.micrometer.common.util.StringUtils;
@@ -14,7 +15,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.web.multipart.MultipartFile;
+import pt.feup.ghmm.metrics.models.CodeRepo;
 import pt.feup.ghmm.metrics.models.RepoExample;
+import pt.feup.ghmm.metrics.models.RepoMined;
 
 public class CSVHelper {
     public static String TYPE = "text/csv";
@@ -28,43 +31,55 @@ public class CSVHelper {
         return true;
     }
 
-    public static List<RepoExample> csvToRepoExamples(InputStream is) {
+    public static List<CodeRepo> csvToCodeRepos(InputStream is, boolean examples) {
         if(is == null) return new ArrayList<>();
         try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
              CSVParser csvParser = new CSVParser(fileReader,
                      CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())) {
-            List<RepoExample> repos = new ArrayList<>();
+            List<CodeRepo> repos = new ArrayList<>();
 
             Iterable<CSVRecord> csvRecords = csvParser.getRecords();
 
             for (CSVRecord csvRecord : csvRecords) {
-                RepoExample repoExample = RepoExample.builder()
-                        .owner(csvRecord.get("owner"))
-                        .appName(csvRecord.get("name"))
-                        .url(csvRecord.get("url"))
-                        .microservice(Boolean.parseBoolean(csvRecord.get("microservice")))
-                        .build();
-                boolean isUrlValid = isUrlValid(repoExample.getUrl());
+                CodeRepo codeRepo = getCodeRepoInstance(examples, csvRecord);
+                boolean isUrlValid = isUrlValid(codeRepo.getUrl());
                 if(isUrlValid){
-                    repoExample.setName(getRepositoryNameFromUrl(repoExample.getUrl()));
-                    if(StringUtils.isEmpty(repoExample.getOwner())){
-                        repoExample.setOwner(getOwnerFromUrl(repoExample.getUrl()));
+                    codeRepo.setName(getRepositoryNameFromUrl(codeRepo.getUrl()));
+                    if(StringUtils.isEmpty(codeRepo.getOwner())){
+                        codeRepo.setOwner(getOwnerFromUrl(codeRepo.getUrl()));
                     }
-                    if(StringUtils.isEmpty(repoExample.getAppName())){
-                        repoExample.setAppName(getRepositoryNameFromUrl(repoExample.getUrl()));
+                    if(StringUtils.isEmpty(codeRepo.getAppName())){
+                        codeRepo.setAppName(getRepositoryNameFromUrl(codeRepo.getUrl()));
                     }
                 } else {
-                    repoExample.setUrl(repoExample.getUrl() + " invalid URL!");
-                    repoExample.setOwner(null);
-                    repoExample.setName(null);
-                    repoExample.setAppName(null);
+                    codeRepo.setUrl(codeRepo.getUrl() + " invalid URL!");
+                    codeRepo.setOwner(null);
+                    codeRepo.setName(null);
+                    codeRepo.setAppName(null);
                 }
-                repos.add(repoExample);
+                repos.add(codeRepo);
             }
             return repos;
         } catch (IOException e) {
             throw new RuntimeException("fail to parse CSV file: " + e.getMessage());
         }
+    }
+
+    private static CodeRepo getCodeRepoInstance(boolean examples, CSVRecord csvRecord) {
+        if(examples){
+            return RepoExample.builder()
+                    .owner(csvRecord.get("owner"))
+                    .appName(csvRecord.get("name"))
+                    .url(csvRecord.get("url"))
+                    .microservice(Boolean.parseBoolean(csvRecord.get("microservice")))
+                    .createdDate(new Date())
+                    .build();
+        }
+        return RepoMined.builder()
+                .appName(csvRecord.get(0))
+                .url(csvRecord.get(1))
+                .minedDate(new Date())
+                .build();
     }
 
     public static boolean isUrlValid(String url) {
