@@ -1,4 +1,3 @@
-pt/feup/ghmm/metrics/services/RepoExampleMetricsServiceTest.class
 pt/feup/ghmm/core/services/GitHubApiServiceTest.class
 pt/feup/ghmm/metrics/services/LanguageServiceTest.class
 pt/feup/ghmm/GhmmApplicationTests.class
