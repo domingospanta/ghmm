@@ -2,6 +2,7 @@ package pt.feup.ghmm.metrics.services;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -186,6 +187,7 @@ public class CodeRepoService {
 
     public RepoResult save(CodeRepo codeRepo) {
         try{
+            codeRepo.setLastModified(new Date());
             if(codeRepo instanceof RepoExample){
                 repoExampleRepository.save((RepoExample)codeRepo);
             }else {

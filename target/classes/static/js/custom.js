@@ -120,9 +120,9 @@ function metricsStatusRequest() {
             processResultDiv.show();
           } else {
             let unprocessedMetrics = $("#" +  processExecution.type + "UnprocessedMetrics");
+            let progressbar = $("#" +  processExecution.type + "ProgressBar");
             unprocessedMetrics.text(processExecution.processedItems + "/" + processExecution.totalItems);
-            let bar = document.querySelector(".progress-bar");
-            bar.style.width = ((processExecution.processedItems/processExecution.totalItems) * 100) + "%";
+            progressbar.width((processExecution.processedItems/processExecution.totalItems) * 100);
           }
         }
   });

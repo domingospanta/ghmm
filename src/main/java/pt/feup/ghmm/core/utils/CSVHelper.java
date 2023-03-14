@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import io.micrometer.common.util.StringUtils;
@@ -71,11 +72,13 @@ public class CSVHelper {
                     .appName(csvRecord.get("name"))
                     .url(csvRecord.get("url"))
                     .microservice(Boolean.parseBoolean(csvRecord.get("microservice")))
+                    .createdDate(new Date())
                     .build();
         }
         return RepoMined.builder()
                 .appName(csvRecord.get(0))
                 .url(csvRecord.get(1))
+                .minedDate(new Date())
                 .build();
     }
 

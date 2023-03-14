@@ -46,7 +46,7 @@
                         </button>
                     </div>
                     <div class="progress mt-3">
-                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        <div th:id="${type} + 'ProgressBar'" class="progress-bar" role="progressbar" style="width: 0%"></div>
                     </div>
                     <div th:id="${type} + 'ProcessResultDiv'" class="alert alert-dismissible fade show mt-3" role="alert" style="display: none">
                         <p th:id="${type} + 'ProcessResultMessage'"></p>
