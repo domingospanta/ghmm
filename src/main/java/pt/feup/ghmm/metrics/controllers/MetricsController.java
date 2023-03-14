@@ -94,7 +94,7 @@ public class MetricsController {
             codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse(MINED_PROCESS_TYPE));
             return "started";
         }
-        return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type" + processExecution.getProcessType() + " in execution.";
+        return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type " + processExecution.getProcessType() + " in execution.";
     }
 
     @GetMapping("/generation/status")
