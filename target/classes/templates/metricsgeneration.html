@@ -18,8 +18,8 @@
     </div><!-- End Page Title -->
 
     <div class="row">
-        <div th:replace="~{fragments/repoMetric :: metrics(title='Repo Examples', repo=${repoExampleMetrics})}"> </div>
-        <div th:replace="~{fragments/repoMetric :: metrics(title='Mined Repos', repo=${minedRepoMetrics})}"> </div>
+        <div th:replace="~{fragments/repoMetric :: metrics(title='Repo Examples', repo=${repoExampleMetrics}, type='example')}"> </div>
+        <div th:replace="~{fragments/repoMetric :: metrics(title='Mined Repos', repo=${minedRepoMetrics}, type='mined' )}"> </div>
     </div>
 </div>
 </body>

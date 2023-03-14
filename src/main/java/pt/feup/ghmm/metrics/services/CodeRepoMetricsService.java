@@ -173,10 +173,10 @@ public class CodeRepoMetricsService {
         return processExecution;
     }
 
-    public ProcessExecution createProcessExecution() {
+    public ProcessExecution createProcessExecution(String processType) {
         ProcessExecution processExecution = ProcessExecution.builder()
                 .running(true)
-                .processType("Metrics")
+                .processType(processType)
                 .build();
         processExecutionRepository.save(processExecution);
         return processExecution;

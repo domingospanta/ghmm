@@ -72,12 +72,26 @@ public class MetricsController {
     }
 
 
-    @GetMapping("/generation/start")
+    @GetMapping("/example/start")
     @ResponseBody
     public String startMetricsGeneration(){
-        processExecution = codeRepoMetricsService.createProcessExecution();
-        codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
-        return "started";
+        if(processExecution == null || !processExecution.isRunning()){
+            processExecution = codeRepoMetricsService.createProcessExecution("example");
+            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
+            return "started";
+        }
+        return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type " + processExecution.getProcessType() + " in execution.";
+    }
+
+    @GetMapping("/mined/start")
+    @ResponseBody
+    public String startMinedMetricsGeneration(){
+        if(processExecution == null || !processExecution.isRunning()){
+            processExecution = codeRepoMetricsService.createProcessExecution("mined");
+            codeRepoMetricsService.runMetricsExtraction(processExecution, codeRepoService.findByProcessedFalse());
+            return "started";
+        }
+        return "There can be only one process executing at a time due to GitHub API requests per minute limitation. \nThere is a process of type" + processExecution.getProcessType() + " in execution.";
     }
 
     @GetMapping("/generation/status")
@@ -89,6 +103,7 @@ public class MetricsController {
                 .message(processExecution.getMessage())
                 .running(processExecution.isRunning())
                 .processedItems(processExecution.getProcessedItems())
+                .type(processExecution.getProcessType())
                 .totalItems(processExecution.getTotalItems())
                 .error(processExecution.isError())
                 .build();
