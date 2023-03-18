@@ -4,13 +4,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pt.feup.ghmm.metrics.models.*;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
-import pt.feup.ghmm.metrics.repositories.RepoExampleRepository;
 import pt.feup.ghmm.metrics.repositories.RepoMinedMetricsRepository;
 
 import java.util.*;
 
-import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
-import static pt.feup.ghmm.core.utils.Constants.MS_CLASSIFICATION_SCORE;
+import static pt.feup.ghmm.core.utils.Constants.*;
 
 @AllArgsConstructor
 @Service
@@ -23,10 +21,6 @@ public class MetricsDerivationService {
     private ThresholdService thresholdService;
 
     private CodeRepoService codeRepoService;
-
-    private final String SIZE = "size";
-    private final String FILES = "files";
-    private final String ALL_CONTENTS = "allContents";
 
     public void runMetricsDerivationForRepoExamples() {
         runMetricsDerivationForRepoExamples(true, true);
@@ -131,8 +125,10 @@ public class MetricsDerivationService {
             }
             boolean hasMsSetIndicator = metrics.getProgrammingLanguages() > 1 && metrics.getDatabaseServices() > 1;
             boolean hasMonolithIndicator = metrics.getProgrammingLanguages() > 1 && hasFrontendLanguages(metrics.getLanguages());
-            double score = calculateScore(metrics, hasMsSetIndicator);
+            StringBuilder report = new StringBuilder();
+            double score = calculateScore(metrics, hasMsSetIndicator, report);
             codeRepo.setScore(score);
+            codeRepo.setMessage(report.toString());
             if (score > MS_CLASSIFICATION_SCORE){
                 if(hasMsSetIndicator){
                     codeRepo.setClassification("MICROSERVICE_SET");
@@ -163,26 +159,39 @@ public class MetricsDerivationService {
         return false;
     }
 
-    private double calculateScore(CodeRepoMetrics codeRepoMetrics, boolean hasMsSetIndicator) {
+    private double calculateScore(CodeRepoMetrics codeRepoMetrics, boolean hasMsSetIndicator, StringBuilder report) {
         double score = 0;
-        score += getNumericalScore(codeRepoMetrics.getSize(), thresholdService.findByMetric(SIZE, hasMsSetIndicator).getThresholdValue());
-        score += getNumericalScore(codeRepoMetrics.getFiles(), thresholdService.findByMetric(FILES, hasMsSetIndicator).getThresholdValue());
-        score += getNumericalScore(codeRepoMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS, hasMsSetIndicator).getThresholdValue());
-        score += getBooleanScore(codeRepoMetrics.isDockerfile());
-        score += getBooleanScore(codeRepoMetrics.isLogsService());
-        score += getBooleanScore(codeRepoMetrics.isDatabaseConnection());
-        score += getBooleanScore(codeRepoMetrics.isMessaging());
-        score += getBooleanScore(codeRepoMetrics.isRestful());
-        score += getBooleanScore(codeRepoMetrics.isMicroserviceMention());
-        score += getBooleanScore(!codeRepoMetrics.isSoap());
+        report.append("Missing: ");
+        score += getNumericalScore(codeRepoMetrics.getSize(), thresholdService.findByMetric(SIZE, hasMsSetIndicator).getThresholdValue(), report, SIZE);
+        score += getNumericalScore(codeRepoMetrics.getFiles(), thresholdService.findByMetric(FILES, hasMsSetIndicator).getThresholdValue(), report, FILES);
+        score += getNumericalScore(codeRepoMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS, hasMsSetIndicator).getThresholdValue(), report, ALL_CONTENTS);
+        score += getBooleanScore(codeRepoMetrics.isDockerfile(), report, DOCKERFILE);
+        score += getBooleanScore(codeRepoMetrics.isLogsService(), report, LOG_SERVICE);
+        score += getBooleanScore(codeRepoMetrics.isDatabaseConnection(), report, DATABASE);
+        score += getBooleanScore(codeRepoMetrics.isMessaging(), report, MESSAGING);
+        score += getBooleanScore(codeRepoMetrics.isRestful(), report, REST);
+        score += getBooleanScore(codeRepoMetrics.isMicroserviceMention(), report, MS_MENTION);
+        score += getBooleanScore(!codeRepoMetrics.isSoap(), report, SOAP);
+        if(MAX_CLASSIFICATION_SCORE == score){
+            report.setLength(0);
+            report.append("All metrics found!");
+        }
         return score;
     }
 
-    private double getBooleanScore(boolean metric) {
-        return metric ? 1 : 0;
+    private double getBooleanScore(boolean metricValue, StringBuilder report, String metric) {
+        if(metricValue){
+            return 1;
+        }
+        report.append(" ").append(metric);
+        return 0;
     }
 
-    private double getNumericalScore(long metric, double thresholdValue) {
-        return metric <= thresholdValue ? 1 : 0;
+    private double getNumericalScore(long metricValue, double thresholdValue, StringBuilder report, String metric) {
+        if(metricValue <= thresholdValue){
+            return 1;
+        }
+        report.append(" ").append(metric);
+        return 0;
     }
 }
