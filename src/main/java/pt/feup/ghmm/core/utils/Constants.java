@@ -15,4 +15,9 @@ public final class Constants {
     public static final String REST = "rest";
     public static final String MESSAGING = "messaging";
     public static final String SOAP = "not_soap";
+
+
+    public static final String MICROSERVICE_SET = "MICROSERVICE_SET";
+    public static final String MICROSERVICE = "MICROSERVICE";
+    public static final String MONOLITH = "MONOLITH";
 }

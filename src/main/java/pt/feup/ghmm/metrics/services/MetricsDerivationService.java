@@ -109,14 +109,14 @@ public class MetricsDerivationService {
         return value  < MAX_LOW_RISK_CLASSIFICATION;
     }
 
-    public void calculateMetricsScores(String processType) {
-        List<? extends CodeRepoMetrics> repoExampleMetricsList;
+    public void calculateScoresAndSetClassification(String processType) {
+        List<? extends CodeRepoMetrics> codeRepoMetricsList;
         if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
-            repoExampleMetricsList = repoExampleMetricsRepository.findAll();
+            codeRepoMetricsList = repoExampleMetricsRepository.findAll();
         } else {
-            repoExampleMetricsList = repoMinedMetricsRepository.findAll();
+            codeRepoMetricsList = repoMinedMetricsRepository.findAll();
         }
-        for(CodeRepoMetrics metrics: repoExampleMetricsList){
+        for(CodeRepoMetrics metrics: codeRepoMetricsList){
             CodeRepo codeRepo;
             if(metrics instanceof RepoExampleMetrics exampleMetrics){
                 codeRepo = exampleMetrics.getRepoExample();
@@ -129,25 +129,27 @@ public class MetricsDerivationService {
             double score = calculateScore(metrics, hasMsSetIndicator, report);
             codeRepo.setScore(score);
             codeRepo.setMessage(report.toString());
-            if (score > MS_CLASSIFICATION_SCORE){
-                if(hasMsSetIndicator){
-                    codeRepo.setClassification("MICROSERVICE_SET");
-                } else if(hasMonolithIndicator){
-                    codeRepo.setScore(codeRepo.getScore() - 1);
-                    if (score > MS_CLASSIFICATION_SCORE){
-                        codeRepo.setClassification("MICROSERVICE");
-                    }else {
-                        codeRepo.setClassification("MONOLITH");
-                    }
-                }
-                else {
-                    codeRepo.setClassification("MICROSERVICE");
-                }
-            } else {
-                codeRepo.setClassification("MONOLITH");
-            }
+            String classification = getCodeRepoClassification(score, hasMsSetIndicator, hasMonolithIndicator);
+            codeRepo.setClassification(classification);
             codeRepoService.save(codeRepo);
         }
+    }
+
+    private String getCodeRepoClassification(double score, boolean hasMsSetIndicator, boolean hasMonolithIndicator) {
+        if (score > MS_CLASSIFICATION_SCORE){
+            if(hasMsSetIndicator){
+                return MICROSERVICE_SET;
+            }
+            if(hasMonolithIndicator){
+                if ((score -1) > MS_CLASSIFICATION_SCORE){
+                    return MICROSERVICE_SET;
+                }
+                return MONOLITH;
+            }
+            return MICROSERVICE;
+
+        }
+        return MONOLITH;
     }
 
     private boolean hasFrontendLanguages(Set<Language> languages) {

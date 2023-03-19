@@ -77,11 +77,11 @@ public class CodeRepoMetricsService {
 
     private void executeMetricsOperations(String processType) {
         cleanUpMetrics(processType);
-        computeServicesCount(processType);
+        countServicesAndLanguages(processType);
         if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
             metricsDerivationService.runMetricsDerivationForRepoExamples();
         }
-        metricsDerivationService.calculateMetricsScores(processType);
+        metricsDerivationService.calculateScoresAndSetClassification(processType);
     }
 
     private void cleanUpMetrics(String processType) {
@@ -99,7 +99,7 @@ public class CodeRepoMetricsService {
     }
 
 
-    private void computeServicesCount(String processType) {
+    private void countServicesAndLanguages(String processType) {
         List<? extends CodeRepoMetrics> repoExampleMetricsList;
         if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
             repoExampleMetricsList = repoExampleMetricsRepository.findAll();
