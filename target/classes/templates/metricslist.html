@@ -10,16 +10,16 @@
         <h1>List of Metrics Generated</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                <li class="breadcrumb-item">Metrics</li>
-                <li class="breadcrumb-item active">List</li>
+                <li th:if="${processType == 'example'}"class="breadcrumb-item">Repo Examples</li>
+                <li th:if="${processType == 'mined'}"class="breadcrumb-item">Identification</li>
+                <li class="breadcrumb-item active">List Metrics</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
 
     <div class="card container" >
         <div class="card-body table-responsive">
-            <div th:replace="~{fragments/searchBar :: searchBar('/metrics/all')}"> </div>
+            <div th:replace="~{fragments/searchBar :: searchBar('/metrics/all/'+ ${processType})}"> </div>
             <div class="container">
                 <label>[[${totalItems}]] result(s)</label>
             </div>
@@ -44,7 +44,8 @@
 
                 <tr th:each="metric : ${reposMetrics}">
                     <th scope="row">
-                        <a th:href="@{${metric.repoExample.url}}" target="_blank">[[${metric.repoExample.name}]]</a>
+                        <a th:if="${processType == 'example'}" th:href="@{${metric.repoExample.url}}" target="_blank">[[${metric.repoExample.name}]]</a>
+                        <a th:if="${processType == 'mined'}" th:href="@{${metric.repoMined.url}}" target="_blank">[[${metric.repoMined.name}]]</a>
                     </th>
                     <td>[[${metric.size}]]</td>
                     <td>

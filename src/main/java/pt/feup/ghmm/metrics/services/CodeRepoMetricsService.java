@@ -47,8 +47,9 @@ public class CodeRepoMetricsService {
 
     private MetricsDerivationService metricsDerivationService;
 
-    public Page<RepoExampleMetrics> findAll(Pageable paging) {
-        return repoExampleMetricsRepository.findAll(paging);
+    public Page<? extends CodeRepoMetrics> findAll(Pageable paging, String processType) {
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)) return repoExampleMetricsRepository.findAll(paging);
+        return repoMinedMetricsRepository.findAll(paging);
     }
 
     @Async
@@ -453,8 +454,10 @@ public class CodeRepoMetricsService {
         return processExecution.orElse(null);
     }
 
-    public Page<RepoExampleMetrics> findByRepoExamples(String keyword, Pageable paging) {
-        return repoExampleMetricsRepository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
+    public Page<? extends CodeRepoMetrics> findAllByProcessType(String keyword, Pageable paging, String processType) {
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)) return repoExampleMetricsRepository.findByRepoExampleUrlContainingIgnoreCase(keyword, paging);
+
+        return repoMinedMetricsRepository.findByRepoMinedUrlContainingIgnoreCase(keyword, paging);
     }
 
     public long countAllByMicroservice(boolean microservice) {

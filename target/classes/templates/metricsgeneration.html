@@ -10,16 +10,18 @@
         <h1>Metrics Generation</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-                <li class="breadcrumb-item">Metrics</li>
-                <li class="breadcrumb-item active">Generation</li>
+                <li th:if="${processType == 'example'}"class="breadcrumb-item">Repo Examples</li>
+                <li th:if="${processType == 'mined'}"class="breadcrumb-item">Identification</li>
+                <li class="breadcrumb-item active">Process Metrics</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
 
-    <div class="row">
-        <div th:replace="~{fragments/repoMetric :: metrics(title='Repo Examples', repo=${repoExampleMetrics}, type='example')}"> </div>
-        <div th:replace="~{fragments/repoMetric :: metrics(title='Mined Repos', repo=${minedRepoMetrics}, type='mined' )}"> </div>
+    <div class="row" th:if="${repoExampleMetrics != null}">
+        <div  th:replace="~{fragments/repoMetric :: metrics(title='Repo Examples', repo=${repoExampleMetrics}, type='example')}"> </div>
+    </div>
+    <div class="row" th:if="${minedRepoMetrics != null}">
+        <div th:if="${minedRepoMetrics != null} == true" th:replace="~{fragments/repoMetric :: metrics(title='Mined Repos', repo=${minedRepoMetrics}, type='mined' )}"> </div>
     </div>
 </div>
 </body>

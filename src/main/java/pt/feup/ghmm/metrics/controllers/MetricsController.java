@@ -8,8 +8,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
+import pt.feup.ghmm.metrics.models.CodeRepoMetrics;
 import pt.feup.ghmm.metrics.models.ProcessExecution;
-import pt.feup.ghmm.metrics.models.RepoExampleMetrics;
 import pt.feup.ghmm.metrics.services.CodeRepoMetricsService;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
 
@@ -34,26 +34,28 @@ public class MetricsController {
         this.codeRepoService = codeRepoService;
     }
 
-    @GetMapping("/all")
+    @GetMapping("/all/{processType}")
     public String getAll(Model model,
+                         @PathVariable("processType") String processType,
                          @RequestParam(required = false) String keyword,
                          @RequestParam(defaultValue = "1") int page,
                          @RequestParam(defaultValue = "10") int size) {
         try {
-            List<RepoExampleMetrics> repoExampleMetrics;
+            List<? extends CodeRepoMetrics> codeRepoMetrics;
             Pageable paging = PageRequest.of(page - 1, size);
 
-            Page<RepoExampleMetrics> pageTuts;
+            Page<? extends CodeRepoMetrics> pageTuts;
             if (keyword == null) {
-                pageTuts = codeRepoMetricsService.findAll(paging);
+                pageTuts = codeRepoMetricsService.findAll(paging, processType);
             } else {
-                pageTuts = codeRepoMetricsService.findByRepoExamples(keyword, paging);
+                pageTuts = codeRepoMetricsService.findAllByProcessType(keyword, paging, processType);
                 model.addAttribute("keyword", keyword);
             }
 
-            repoExampleMetrics = pageTuts.getContent();
+            codeRepoMetrics = pageTuts.getContent();
 
-            model.addAttribute("reposMetrics", repoExampleMetrics);
+            model.addAttribute("processType", processType);
+            model.addAttribute("reposMetrics", codeRepoMetrics);
             model.addAttribute("currentPage", pageTuts.getNumber() + 1);
             model.addAttribute("totalItems", pageTuts.getTotalElements());
             model.addAttribute("totalPages", pageTuts.getTotalPages());
@@ -65,12 +67,15 @@ public class MetricsController {
         return LIST_PAGE;
     }
 
-    @GetMapping("/generation")
-    public String getMetricsGenerationPage(Model model){
+    @GetMapping("/generation/{processType}")
+    public String getMetricsGenerationPage(@PathVariable("processType") String processType,  Model model){
         model.addAttribute("processing", processExecution != null && processExecution.isRunning());
-
-        model.addAttribute("repoExampleMetrics", codeRepoMetricsService.getMetricsForCodeRepos(true));
-        model.addAttribute("minedRepoMetrics", codeRepoMetricsService.getMetricsForCodeRepos(false));
+        model.addAttribute("processType", processType);
+        if(EXAMPLE_PROCESS_TYPE.equalsIgnoreCase(processType)){
+            model.addAttribute("repoExampleMetrics", codeRepoMetricsService.getMetricsForCodeRepos(true));
+        }else {
+            model.addAttribute("minedRepoMetrics", codeRepoMetricsService.getMetricsForCodeRepos(false));
+        }
         return GENERATE_PAGE;
     }
 
