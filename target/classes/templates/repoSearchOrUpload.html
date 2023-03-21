@@ -20,42 +20,30 @@
             <h5 class="card-title">Search/Mine code repositories from GitHub</h5>
 
             <!-- General Form Elements -->
-            <form action="#" th:action="@{/repo/examples/add}" th:object="${minedRepo}" method="post">
+            <form action="#" th:action="@{/repo/mined/search}" th:object="${searchRepoDto}" method="post">
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Search String</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" th:field="*{owner}">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Topics</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" th:field="*{name}">
+                        <input type="text" class="form-control" th:field="*{searchString}">
                     </div>
                 </div>
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Programming Languages</label>
                     <div class="col-sm-10">
-                        <input type="url" class="form-control" th:field="*{url}">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Stars</label>
-                    <div class="col-sm-10">
-                        <input type="url" class="form-control" th:field="*{url}">
+                        <input class="form-control" th:field="*{programmingLanguages}">
                     </div>
                 </div>
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Quantity</label>
                     <div class="col-sm-10">
-                        <input type="url" class="form-control" th:field="*{url}">
+                        <input class="form-control" th:field="*{quantity}">
                     </div>
                 </div>
                 <div class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Clear current list?</legend>
                     <div class="col-sm-10">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="gridCheck2" checked th:field="*{microservice}">
+                            <input class="form-check-input" type="checkbox" id="gridCheck2" checked th:field="*{clearList}">
                         </div>
                     </div>
                 </div>

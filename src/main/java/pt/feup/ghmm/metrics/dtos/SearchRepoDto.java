@@ -1,6 +1,5 @@
 package pt.feup.ghmm.metrics.dtos;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,13 +10,12 @@ import pt.feup.ghmm.core.response.ResponseMessage;
 @NoArgsConstructor
 @Data
 @SuperBuilder
-public class CodeRepoDto extends ResponseMessage {
-    private String owner;
+public class SearchRepoDto extends ResponseMessage {
+    private String searchString;
 
-    private String name;
+    private String programmingLanguages;
 
-    @NotBlank(message = "Url is mandatory")
-    private String url;
+    private int quantity;
 
-    private boolean microservice;
+    private boolean clearList;
 }

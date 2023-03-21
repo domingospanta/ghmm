@@ -1,4 +1,4 @@
-package pt.feup.ghmm.metrics.controllers;
+package pt.feup.ghmm.identification.controllers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,9 +10,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pt.feup.ghmm.core.utils.CSVHelper;
-import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
-import pt.feup.ghmm.metrics.dtos.RepoExampleUploadDto;
+import pt.feup.ghmm.metrics.dtos.CodeRepoDto;
+import pt.feup.ghmm.metrics.dtos.CodeRepoUploadDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
+import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
 import pt.feup.ghmm.metrics.models.RepoMined;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
 
@@ -60,19 +61,19 @@ public class RepoMinedController {
     }
 
     @GetMapping("/upload")
-    public String getRepoExamplesPage(Model model){
+    public String getMinedRepoPage(Model model){
         return prepareDataForUploadPage(model);
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteRepoExample(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String deleteMinedRepo(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         RepoMined repoMined = codeRepoService.findRepoMinedById(id);
         if(repoMined != null){
             RepoResult repoResult = codeRepoService.deleteRepoMined(repoMined);
             redirectAttributes.addFlashAttribute("result", repoResult);
         }
 
-        return "redirect:/repo/examples/all";
+        return "redirect:/repo/mined/all";
     }
 
     @PostMapping("/upload")
@@ -92,8 +93,8 @@ public class RepoMinedController {
         } else {
             message = "Please select a csv file!";
         }
-        RepoExampleUploadDto uploadResult =
-                RepoExampleUploadDto.builder()
+        CodeRepoUploadDto uploadResult =
+                CodeRepoUploadDto.builder()
                         .resultMap(repoResults)
                         .error(error)
                         .message(message).build();
@@ -101,8 +102,20 @@ public class RepoMinedController {
         return prepareDataForUploadPage(model);
     }
 
+    @PostMapping("/search")
+    public String searchMinedRepo(@ModelAttribute SearchRepoDto searchRepo, Model model) {
+        /*RepoResult repoResult = codeRepoService.save(example);
+        model.addAttribute("result", repoResult);
+        if(repoResult.isError()){
+            model.addAttribute("example", example);
+        } else {
+            model.addAttribute("example", new CodeRepoDto());
+        }*/
+        return UPLOAD_PAGE;
+    }
+
     private String prepareDataForUploadPage(Model model) {
-        model.addAttribute("minedRepo", new RepoExampleDto());
+        model.addAttribute("searchRepoDto", new SearchRepoDto());
         return UPLOAD_PAGE;
     }
 }

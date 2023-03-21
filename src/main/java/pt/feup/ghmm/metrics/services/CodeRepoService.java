@@ -17,7 +17,7 @@ import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.multipart.MultipartFile;
 import pt.feup.ghmm.core.dtos.MainRepositoryDto;
 import pt.feup.ghmm.core.utils.CSVHelper;
-import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
+import pt.feup.ghmm.metrics.dtos.CodeRepoDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.CodeRepo;
 import pt.feup.ghmm.metrics.models.RepoExample;
@@ -173,14 +173,14 @@ public class CodeRepoService {
 
 
 
-    public RepoResult save(RepoExampleDto repoExampleDto) {
+    public RepoResult save(CodeRepoDto codeRepoDto) {
             RepoExample repoExample = RepoExample
                     .builder()
-                    .url(repoExampleDto.getUrl())
-                    .appName(repoExampleDto.getName())
-                    .owner(repoExampleDto.getOwner())
-                    .name(getRepositoryNameFromUrl(repoExampleDto.getUrl()))
-                    .microservice(repoExampleDto.isMicroservice())
+                    .url(codeRepoDto.getUrl())
+                    .appName(codeRepoDto.getName())
+                    .owner(codeRepoDto.getOwner())
+                    .name(getRepositoryNameFromUrl(codeRepoDto.getUrl()))
+                    .microservice(codeRepoDto.isMicroservice())
                     .build();
             return save(repoExample);
     }

@@ -11,7 +11,7 @@ import pt.feup.ghmm.core.response.ResponseMessage;
 @NoArgsConstructor
 @Data
 @SuperBuilder
-public class RepoExampleDto extends ResponseMessage {
+public class CodeRepoDto extends ResponseMessage {
     private String owner;
 
     private String name;

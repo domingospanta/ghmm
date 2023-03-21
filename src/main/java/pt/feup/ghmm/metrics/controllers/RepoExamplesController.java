@@ -9,8 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pt.feup.ghmm.metrics.dtos.RepoExampleDto;
-import pt.feup.ghmm.metrics.dtos.RepoExampleUploadDto;
+import pt.feup.ghmm.metrics.dtos.CodeRepoDto;
+import pt.feup.ghmm.metrics.dtos.CodeRepoUploadDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
@@ -76,13 +76,13 @@ public class RepoExamplesController {
     }
 
     @PostMapping("/add")
-    public String addRepoExample(@ModelAttribute RepoExampleDto example, Model model) {
+    public String addRepoExample(@ModelAttribute CodeRepoDto example, Model model) {
         RepoResult repoResult = codeRepoService.save(example);
         model.addAttribute("result", repoResult);
         if(repoResult.isError()){
             model.addAttribute("example", example);
         } else {
-            model.addAttribute("example", new RepoExampleDto());
+            model.addAttribute("example", new CodeRepoDto());
         }
         return UPLOAD_PAGE;
     }
@@ -105,8 +105,8 @@ public class RepoExamplesController {
         } else {
             message = "Please select a csv file!";
         }
-        RepoExampleUploadDto uploadResult =
-                RepoExampleUploadDto.builder()
+        CodeRepoUploadDto uploadResult =
+                CodeRepoUploadDto.builder()
                         .resultMap(repoResults)
                         .error(error)
                         .message(message).build();
@@ -115,7 +115,7 @@ public class RepoExamplesController {
     }
 
     private String prepareDataForUploadPage(Model model) {
-        model.addAttribute("example", new RepoExampleDto());
+        model.addAttribute("example", new CodeRepoDto());
         return UPLOAD_PAGE;
     }
 }
