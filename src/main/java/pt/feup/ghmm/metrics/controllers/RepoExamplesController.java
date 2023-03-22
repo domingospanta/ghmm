@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pt.feup.ghmm.metrics.dtos.CodeRepoDto;
-import pt.feup.ghmm.metrics.dtos.CodeRepoUploadDto;
+import pt.feup.ghmm.metrics.dtos.BulkCodeRepoResultDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
@@ -105,8 +105,8 @@ public class RepoExamplesController {
         } else {
             message = "Please select a csv file!";
         }
-        CodeRepoUploadDto uploadResult =
-                CodeRepoUploadDto.builder()
+        BulkCodeRepoResultDto uploadResult =
+                BulkCodeRepoResultDto.builder()
                         .resultMap(repoResults)
                         .error(error)
                         .message(message).build();

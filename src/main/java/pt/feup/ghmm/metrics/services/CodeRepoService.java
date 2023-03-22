@@ -15,10 +15,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.multipart.MultipartFile;
+import pt.feup.ghmm.core.dtos.ItemDto;
 import pt.feup.ghmm.core.dtos.MainRepositoryDto;
+import pt.feup.ghmm.core.dtos.SearchResultDto;
+import pt.feup.ghmm.core.services.GitHubApiService;
 import pt.feup.ghmm.core.utils.CSVHelper;
+import pt.feup.ghmm.metrics.dtos.BulkCodeRepoResultDto;
 import pt.feup.ghmm.metrics.dtos.CodeRepoDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
+import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
 import pt.feup.ghmm.metrics.models.CodeRepo;
 import pt.feup.ghmm.metrics.models.RepoExample;
 import pt.feup.ghmm.metrics.models.RepoMined;
@@ -32,12 +37,13 @@ import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
 @AllArgsConstructor
 @Service
 public class CodeRepoService {
+   private static final Logger logger = LoggerFactory.getLogger(CodeRepoService.class);
 
-    private static final Logger logger = LoggerFactory.getLogger(CodeRepoService.class);
-
-    private RepoExampleRepository repoExampleRepository;
+   private RepoExampleRepository repoExampleRepository;
 
    private RepoMinedRepository repoMinedRepository;
+
+   private GitHubApiService gitHubApiService;
 
     public List<RepoResult> save(MultipartFile file, boolean examples) {
         try {
@@ -68,39 +74,24 @@ public class CodeRepoService {
         }
     }
 
-    public RepoResult delete(RepoExample repoExample){
+    public RepoResult delete(CodeRepo codeRepo){
         try {
-            if(repoExample == null) return null;
-            repoExampleRepository.deleteById(repoExample.getId());
+            if(codeRepo == null) return null;
+            if(codeRepo instanceof RepoExample){
+              repoExampleRepository.deleteById(codeRepo.getId());
+            } else {
+              repoMinedRepository.deleteById(codeRepo.getId());
+            }
         } catch (Exception exception){
-            logger.error("Error deleting repo:" + repoExample.getUrl(), exception);
+            logger.error("Error deleting repo:" + codeRepo.getUrl(), exception);
             return RepoResult.builder()
-                    .repo(repoExample.getUrl())
+                    .repo(codeRepo.getUrl())
                     .error(true)
                     .message(" error " + exception.getMessage() )
                     .build();
         }
         return RepoResult.builder()
-                .repo(repoExample.getUrl())
-                .error(false)
-                .message(" deletion successful!")
-                .build();
-    }
-
-    public RepoResult deleteRepoMined(RepoMined repoMined){
-        try {
-            if(repoMined == null) return null;
-            repoMinedRepository.deleteById(repoMined.getId());
-        } catch (Exception exception){
-            logger.error("Error deleting repo:" + repoMined.getUrl(), exception);
-            return RepoResult.builder()
-                    .repo(repoMined.getUrl())
-                    .error(true)
-                    .message(" error " + exception.getMessage() )
-                    .build();
-        }
-        return RepoResult.builder()
-                .repo(repoMined.getUrl())
+                .repo(codeRepo.getUrl())
                 .error(false)
                 .message(" deletion successful!")
                 .build();
@@ -167,12 +158,6 @@ public class CodeRepoService {
         return repoMinedRepository.count();
     }
 
-    public long countAllMinedRepos() {
-        return repoMinedRepository.count();
-    }
-
-
-
     public RepoResult save(CodeRepoDto codeRepoDto) {
             RepoExample repoExample = RepoExample
                     .builder()
@@ -209,6 +194,17 @@ public class CodeRepoService {
 
     }
 
+    public RepoResult save(ItemDto itemDto) {
+        RepoMined repoMined = RepoMined
+                .builder()
+                .url(itemDto.getUrl())
+                .appName(itemDto.getName())
+                .owner(getOwnerFromUrl(itemDto.getUrl()))
+                .name(itemDto.getName())
+                .build();
+        return save(repoMined);
+    }
+
     public CodeRepo update(CodeRepo codeRepo, MainRepositoryDto mainRepositoryDto) {
         String repoCurrentUrl = mainRepositoryDto.getUrl();
         if(!StringUtils.isEmpty(repoCurrentUrl) &&
@@ -219,5 +215,34 @@ public class CodeRepoService {
             save(codeRepo);
         }
         return codeRepo;
+    }
+
+    public BulkCodeRepoResultDto search(SearchRepoDto searchRepo) {
+        SearchResultDto searchResultDto = gitHubApiService.searchRepositories(searchRepo);
+        if(searchResultDto != null){
+            List<RepoResult> resultMap = new ArrayList<>();
+            int count = 0;
+            for(ItemDto itemDto: searchResultDto.getItems()){
+                RepoResult result = RepoResult
+                        .builder()
+                        .repo("test.com")
+                        .build();
+                //RepoResult result = save(itemDto);
+                resultMap.add(result);
+                if(!result.isError() && ++count >= searchRepo.getQuantity()){
+                   break;
+                }
+            }
+            return BulkCodeRepoResultDto.builder()
+                    .resultMap(resultMap)
+                    .message("Found repos successfully!")
+                    .error(false)
+                    .build();
+        }
+
+        return BulkCodeRepoResultDto.builder()
+                .error(true)
+                .message("Invalid Search! Try again.")
+                .build();
     }
 }

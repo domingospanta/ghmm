@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @SuperBuilder
-public class CodeRepoUploadDto extends ResponseMessage {
+public class BulkCodeRepoResultDto extends ResponseMessage {
     List<RepoResult> resultMap;
     boolean error;
     String message;

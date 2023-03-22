@@ -12,5 +12,7 @@ public class ItemDto {
 
     private String path;
 
+    private String url;
+
     private double score;
 }

@@ -1,5 +1,6 @@
 package pt.feup.ghmm.core.services;
 
+import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,9 +11,9 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.thymeleaf.util.StringUtils;
 import pt.feup.ghmm.core.dtos.*;
 import pt.feup.ghmm.core.utils.YAMLHelper;
+import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
 
 import java.util.HashMap;
 import java.util.List;
@@ -93,6 +94,17 @@ public class GitHubApiService {
       exception.printStackTrace();
     }
    return null;
+  }
+
+  @Retryable(backoff = @Backoff(delay = 30000))
+  public SearchResultDto searchRepositories(SearchRepoDto searchRepoDto){
+    if(searchRepoDto.getQuantity() == 0) return null;
+    if(StringUtils.isNotEmpty(searchRepoDto.getProgrammingLanguages())){
+
+    }
+    String url = END_POINT + "search/repositories?q=" + "language:JavaScript+language:Java";
+    logRequest(url);
+    return restTemplate.getForObject(url, SearchResultDto.class);
   }
 
   private void logRequest(String url) {

@@ -23,7 +23,7 @@
                 <label>[[${totalItems}]] result(s)</label>
 
                 <div th:if="${result != null}">
-                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                    <div th:replace="~{fragments/bulkCodeRepoResult :: uploadResult(result=${result})}"> </div>
                 </div>
             </div>
             <!-- Table with stripped rows -->

@@ -10,13 +10,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pt.feup.ghmm.core.utils.CSVHelper;
-import pt.feup.ghmm.metrics.dtos.CodeRepoDto;
-import pt.feup.ghmm.metrics.dtos.CodeRepoUploadDto;
+import pt.feup.ghmm.metrics.dtos.BulkCodeRepoResultDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
 import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
 import pt.feup.ghmm.metrics.models.RepoMined;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
+import pt.feup.ghmm.metrics.services.LanguageService;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @AllArgsConstructor
@@ -25,6 +27,8 @@ import java.util.List;
 public class RepoMinedController {
 
     private CodeRepoService codeRepoService;
+
+    private LanguageService languageService;
 
     private final String LIST_PAGE = "repoMinedList";
     private final String UPLOAD_PAGE = "repoSearchOrUpload";
@@ -69,7 +73,7 @@ public class RepoMinedController {
     public String deleteMinedRepo(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         RepoMined repoMined = codeRepoService.findRepoMinedById(id);
         if(repoMined != null){
-            RepoResult repoResult = codeRepoService.deleteRepoMined(repoMined);
+            RepoResult repoResult = codeRepoService.delete(repoMined);
             redirectAttributes.addFlashAttribute("result", repoResult);
         }
 
@@ -93,29 +97,32 @@ public class RepoMinedController {
         } else {
             message = "Please select a csv file!";
         }
-        CodeRepoUploadDto uploadResult =
-                CodeRepoUploadDto.builder()
+        BulkCodeRepoResultDto uploadResult =
+                BulkCodeRepoResultDto.builder()
                         .resultMap(repoResults)
                         .error(error)
                         .message(message).build();
-        model.addAttribute("uploadResult", uploadResult);
+        model.addAttribute("bulkCodeRepoResult", uploadResult);
         return prepareDataForUploadPage(model);
     }
 
     @PostMapping("/search")
     public String searchMinedRepo(@ModelAttribute SearchRepoDto searchRepo, Model model) {
-        /*RepoResult repoResult = codeRepoService.save(example);
-        model.addAttribute("result", repoResult);
+        BulkCodeRepoResultDto repoResult = codeRepoService.search(searchRepo);
+        model.addAttribute("bulkCodeRepoResult", repoResult);
+        model.addAttribute("processType", "search");
+        model.addAttribute("programmingLanguages", languageService.getProgrammingLanguages());
         if(repoResult.isError()){
-            model.addAttribute("example", example);
+            model.addAttribute("searchRepoDto", searchRepo);
         } else {
-            model.addAttribute("example", new CodeRepoDto());
-        }*/
+            model.addAttribute("searchRepoDto", new SearchRepoDto());
+        }
         return UPLOAD_PAGE;
     }
 
     private String prepareDataForUploadPage(Model model) {
         model.addAttribute("searchRepoDto", new SearchRepoDto());
+        model.addAttribute("programmingLanguages", languageService.getProgrammingLanguages());
         return UPLOAD_PAGE;
     }
 }

@@ -19,6 +19,10 @@ public class LanguageService {
         this.programmingLanguages = List.of(programmingLanguages.split(","));
     }
 
+    public List<String> getProgrammingLanguages(){
+        return programmingLanguages;
+    }
+
     public Language findOrCreateByName(String name) {
         if(name == null){
             name = "undefined";
