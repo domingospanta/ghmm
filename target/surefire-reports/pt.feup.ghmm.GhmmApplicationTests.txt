@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: pt.feup.ghmm.GhmmApplicationTests
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.74 s - in pt.feup.ghmm.GhmmApplicationTests

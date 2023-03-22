@@ -3,3 +3,4 @@ pt/feup/ghmm/metrics/services/LanguageServiceTest.class
 pt/feup/ghmm/GhmmApplicationTests.class
 pt/feup/ghmm/core/utils/YAMLHelperTest.class
 pt/feup/ghmm/core/utils/CSVHelperTest.class
+pt/feup/ghmm/metrics/services/CodeRepoMetricsServiceTest.class

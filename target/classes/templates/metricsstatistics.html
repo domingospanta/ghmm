@@ -17,10 +17,8 @@
     </div><!-- End Page Title -->
 
     <div class="row">
-
         <div th:replace="~{fragments/statistics :: statistics(title='Microservices', metrics=${msMetrics})}"> </div>
         <div th:replace="~{fragments/statistics :: statistics(title='Monoliths', metrics=${moMetrics})}"> </div>
-
     </div>
 </div>
 </body>
