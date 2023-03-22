@@ -10,7 +10,6 @@
         <h1>List of Repositories Examples</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
                 <li class="breadcrumb-item">Repo Examples</li>
                 <li class="breadcrumb-item active">List</li>
             </ol>
@@ -24,7 +23,7 @@
                 <label>[[${totalItems}]] result(s)</label>
 
                 <div th:if="${result != null}">
-                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                    <div th:replace="~{fragments/bulkCodeRepoResult :: uploadResult(result=${result})}"> </div>
                 </div>
             </div>
             <!-- Table with stripped rows -->
@@ -38,6 +37,7 @@
                     <th scope="col">URL</th>
                     <th scope="col">Ms?</th>
                     <th scope="col">Processed?</th>
+                    <th scope="col">Report</th>
                     <th scope="col">Error?</th>
                 </tr>
                 </thead>
@@ -59,6 +59,7 @@
                     </td>
                     <td>[[${example.microservice}]]</td>
                     <td>[[${example.processed}]]</td>
+                    <td>[[${example.message}]]</td>
                     <td th:attr="class=${example.processingError == true ? 'table-danger' : 'table-success'}">
                         [[${example.processingError}]]
                     </td>

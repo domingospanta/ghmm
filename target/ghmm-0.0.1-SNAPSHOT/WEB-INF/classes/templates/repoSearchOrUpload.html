@@ -9,7 +9,6 @@
         <h1>Mine or Upload Repositories for classification</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
                 <li class="breadcrumb-item">Identification</li>
                 <li class="breadcrumb-item active">Search/Upload</li>
             </ol>
@@ -21,42 +20,32 @@
             <h5 class="card-title">Search/Mine code repositories from GitHub</h5>
 
             <!-- General Form Elements -->
-            <form action="#" th:action="@{/repo/examples/add}" th:object="${minedRepo}" method="post">
+            <form action="#" th:action="@{/repo/mined/search}" th:object="${searchRepoDto}" method="post">
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Search String</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" th:field="*{owner}">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Topics</label>
-                    <div class="col-sm-10">
-                        <input type="text" class="form-control" th:field="*{name}">
+                        <input type="text" class="form-control" th:field="*{searchString}">
                     </div>
                 </div>
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Programming Languages</label>
                     <div class="col-sm-10">
-                        <input type="url" class="form-control" th:field="*{url}">
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Stars</label>
-                    <div class="col-sm-10">
-                        <input type="url" class="form-control" th:field="*{url}">
+                        <select class="form-select" multiple aria-label="multiple select example" th:field="*{programmingLanguages}">
+                            <option th:each="language : ${programmingLanguages}" th:value="${language}" th:text="${language}"></option>
+                        </select>
                     </div>
                 </div>
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Quantity</label>
                     <div class="col-sm-10">
-                        <input type="url" class="form-control" th:field="*{url}">
+                        <input class="form-control" th:field="*{quantity}">
                     </div>
                 </div>
                 <div class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Clear current list?</legend>
                     <div class="col-sm-10">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="gridCheck2" checked th:field="*{microservice}">
+                            <input class="form-check-input" type="checkbox" id="gridCheck2" checked th:field="*{clearList}">
                         </div>
                     </div>
                 </div>
@@ -67,9 +56,21 @@
                     </div>
                 </div>
             </form><!-- End General Form Elements -->
-            <div th:if="${result != null}">
-                <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
-            </div>
+            <div th:if="${bulkCodeRepoResult != null && processType == 'search'}">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${bulkCodeRepoResult.error} == true">
+                    <p th:text="${bulkCodeRepoResult.message}"></p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${bulkCodeRepoResult.error} == false">
+                    <p th:text="${bulkCodeRepoResult.message}"></p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+                    <!-- Modal Dialog Scrollable -->
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalDialogScrollable">
+                        Upload Details
+                    </button>
+                </div>
         </div>
     </div>
 
@@ -91,14 +92,14 @@
                     </div>
                 </div>
             </form><!-- End General Form Elements -->
-            <div th:if="${uploadResult != null}">
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${uploadResult.error} == true">
-                    <p th:text="${uploadResult.message}"></p>
+            <div th:if="${bulkCodeRepoResult != null && processType != 'search'}">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${bulkCodeRepoResult.error} == true">
+                    <p th:text="${bulkCodeRepoResult.message}"></p>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
 
-                <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${uploadResult.error} == false">
-                    <p th:text="${uploadResult.message}"></p>
+                <div class="alert alert-success alert-dismissible fade show" role="alert" th:if="${bulkCodeRepoResult.error} == false">
+                    <p th:text="${bulkCodeRepoResult.message}"></p>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 
                     <!-- Modal Dialog Scrollable -->
@@ -106,17 +107,18 @@
                         Upload Details
                     </button>
                 </div>
+            </div>
 
-                <div class="modal fade" id="modalDialogScrollable" tabindex="-1">
+                <div class="modal fade" id="modalDialogScrollable" tabindex="-1" th:if="${bulkCodeRepoResult != null}">
                     <div class="modal-dialog modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title"> <p th:text="${uploadResult.message}"></p> </h5>
+                                <h5 class="modal-title"> <p th:text="${bulkCodeRepoResult.message}"></p> </h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <div th:each="result: ${uploadResult.resultMap}">
-                                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                                <div th:each="result: ${bulkCodeRepoResult.resultMap}">
+                                    <div th:replace="~{fragments/bulkCodeRepoResult :: bulkCodeRepoResult(result=${result})}"> </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -125,8 +127,6 @@
                         </div>
                     </div>
                 </div><!-- End Modal Dialog Scrollable-->
-
-            </div>
 
 
         </div>

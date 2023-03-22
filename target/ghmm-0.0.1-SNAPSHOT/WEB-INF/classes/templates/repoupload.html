@@ -9,7 +9,6 @@
         <h1>Add/Upload Examples of Repositories</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="index.html">Home</a></li>
                 <li class="breadcrumb-item">Repo Examples</li>
                 <li class="breadcrumb-item active">Add/Upload</li>
             </ol>
@@ -56,7 +55,7 @@
                 </div>
             </form><!-- End General Form Elements -->
             <div th:if="${result != null}">
-                <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                <div th:replace="~{fragments/bulkCodeRepoResult :: uploadResult(result=${result})}"> </div>
             </div>
         </div>
     </div>
@@ -104,7 +103,7 @@
                             </div>
                             <div class="modal-body">
                                 <div th:each="result: ${uploadResult.resultMap}">
-                                    <div th:replace="~{fragments/uploadResult :: uploadResult(result=${result})}"> </div>
+                                    <div th:replace="~{fragments/bulkCodeRepoResult :: uploadResult(result=${result})}"> </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
