@@ -2,6 +2,7 @@ package pt.feup.ghmm.metrics.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import pt.feup.ghmm.core.dtos.ClassificationDto;
 import pt.feup.ghmm.metrics.models.*;
 import pt.feup.ghmm.metrics.repositories.RepoExampleMetricsRepository;
 import pt.feup.ghmm.metrics.repositories.RepoMinedMetricsRepository;
@@ -124,32 +125,47 @@ public class MetricsDerivationService {
                 codeRepo = ((RepoMinedMetrics)metrics).getRepoMined();
             }
             boolean hasMsSetIndicator = metrics.getProgrammingLanguages() > 1 && metrics.getDatabaseServices() > 1;
-            boolean hasMonolithIndicator = metrics.getProgrammingLanguages() > 1 && hasFrontendLanguages(metrics.getLanguages());
+            boolean hasMonolithIndicator = metrics.getProgrammingLanguages() <= 2 && hasFrontendLanguages(metrics.getLanguages());
             StringBuilder report = new StringBuilder();
             double score = calculateScore(metrics, hasMsSetIndicator, report);
-            codeRepo.setScore(score);
             codeRepo.setMessage(report.toString());
-            String classification = getCodeRepoClassification(score, hasMsSetIndicator, hasMonolithIndicator);
-            codeRepo.setClassification(classification);
+            ClassificationDto classificationDto = getCodeRepoClassification(score, hasMsSetIndicator, hasMonolithIndicator);
+            codeRepo.setClassification(classificationDto.getClassification());
+            codeRepo.setScore(classificationDto.getScore());
             codeRepoService.save(codeRepo);
         }
     }
 
-    private String getCodeRepoClassification(double score, boolean hasMsSetIndicator, boolean hasMonolithIndicator) {
+    private ClassificationDto getCodeRepoClassification(double score, boolean hasMsSetIndicator, boolean hasMonolithIndicator) {
         if (score > MS_CLASSIFICATION_SCORE){
             if(hasMsSetIndicator){
-                return MICROSERVICE_SET;
+                return ClassificationDto.builder()
+                        .classification(MICROSERVICE_SET)
+                        .score(score)
+                        .build();
             }
             if(hasMonolithIndicator){
-                if ((score -1) > MS_CLASSIFICATION_SCORE){
-                    return MICROSERVICE_SET;
+                score -= 1;
+                if (score > MS_CLASSIFICATION_SCORE){
+                    return ClassificationDto.builder()
+                            .classification(MICROSERVICE_SET)
+                            .score(score)
+                            .build();
                 }
-                return MONOLITH;
+                return ClassificationDto.builder()
+                        .classification(MONOLITH)
+                        .score(score)
+                        .build();
             }
-            return MICROSERVICE;
-
+            return ClassificationDto.builder()
+                    .classification(MICROSERVICE)
+                    .score(score)
+                    .build();
         }
-        return MONOLITH;
+        return ClassificationDto.builder()
+                .classification(MONOLITH)
+                .score(score)
+                .build();
     }
 
     private boolean hasFrontendLanguages(Set<Language> languages) {
