@@ -39,6 +39,7 @@ pt/feup/ghmm/metrics/services/CodeRepoMetricsService.class
 pt/feup/ghmm/metrics/dtos/BulkCodeRepoResultDto.class
 pt/feup/ghmm/metrics/services/ServiceService.class
 pt/feup/ghmm/metrics/models/ProcessExecution.class
+pt/feup/ghmm/core/dtos/ClassificationDto.class
 pt/feup/ghmm/core/services/GitHubApiService.class
 pt/feup/ghmm/metrics/models/RepoExampleMetrics$RepoExampleMetricsBuilder.class
 pt/feup/ghmm/core/dtos/DockerComposeDto.class
@@ -60,6 +61,7 @@ pt/feup/ghmm/metrics/dtos/CodeRepoDto.class
 pt/feup/ghmm/metrics/dtos/MetricsStatisticsDto$MetricsStatisticsDtoBuilder.class
 pt/feup/ghmm/metrics/repositories/LanguageRepository.class
 pt/feup/ghmm/metrics/repositories/RepoExampleRepository.class
+pt/feup/ghmm/core/dtos/ClassificationDto$ClassificationDtoBuilder.class
 pt/feup/ghmm/core/response/ResponseMessage$ResponseMessageBuilderImpl.class
 pt/feup/ghmm/core/controllers/HomeController.class
 pt/feup/ghmm/metrics/dtos/MetricsStatisticsDto$MetricsStatisticsDtoBuilderImpl.class

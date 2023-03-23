@@ -12,6 +12,7 @@
 /Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/metrics/models/RepoExampleMetrics.java
 /Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/core/dtos/AllContentDto.java
 /Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/core/dtos/ContentDto.java
+/Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/core/dtos/ClassificationDto.java
 /Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/metrics/dtos/SearchRepoDto.java
 /Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/core/dtos/ItemDto.java
 /Users/i557540/Documents/ghmm/src/main/java/pt/feup/ghmm/GhmmApplication.java
