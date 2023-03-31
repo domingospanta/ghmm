@@ -1,6 +1,8 @@
 package pt.feup.ghmm.metrics.services;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pt.feup.ghmm.core.dtos.ClassificationDto;
 import pt.feup.ghmm.metrics.models.*;
@@ -14,6 +16,8 @@ import static pt.feup.ghmm.core.utils.Constants.*;
 @AllArgsConstructor
 @Service
 public class MetricsDerivationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MetricsDerivationService.class);
 
     private RepoExampleMetricsRepository repoExampleMetricsRepository;
 
@@ -50,7 +54,9 @@ public class MetricsDerivationService {
     }
 
     private void runSystemAggregationForWeightNormalization(List<RepoExampleMetrics> metrics, String attribute, double sum) {
-        for(RepoExampleMetrics metric: metrics){
+    logger.info("runSystemAggregationForWeightNormalization for " + attribute);
+    for(RepoExampleMetrics metric: metrics){
+            logger.info("Repo id: " + metric.getRepoExample().getId());
             switch (attribute) {
                 case SIZE:
                     double sizeWeight = metric.getSize() / sum;

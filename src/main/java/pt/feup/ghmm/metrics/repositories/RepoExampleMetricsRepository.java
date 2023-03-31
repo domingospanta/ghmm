@@ -15,6 +15,9 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
 
     List<RepoExampleMetrics> findAll();
 
+    @Query(value = "SELECT m FROM RepoExampleMetrics m " +
+            "WHERE m.repoExample.microservice =:microservice " +
+            "AND m.repoExample.microserviceSet =:microserviceSet ")
     List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderBySizeAsc(boolean microservice, boolean microserviceSet);
 
     List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByFilesAsc(boolean microservice, boolean microserviceSet);
