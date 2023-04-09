@@ -34,19 +34,19 @@ public class MetricsDerivationService {
     }
 
     private void runMetricsDerivationForRepoExamples(boolean microservice, boolean microserviceSet) {
-        List<RepoExampleMetrics> metrics = repoExampleMetricsRepository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderBySizeAsc(microservice, microserviceSet);
+        List<RepoExampleMetrics> metrics = repoExampleMetricsRepository.findAllByMsAndMsSetOrderBySize(microservice, microserviceSet);
         double sizeTotal = metrics.stream().map(RepoExampleMetrics::getSize).reduce(0L, Long::sum);
         runSystemAggregationForWeightNormalization(metrics, SIZE, sizeTotal);
         runWeightRatioAggregation(metrics, SIZE);
         runThresholdDerivation(metrics, SIZE, microservice, microserviceSet);
 
-        metrics = repoExampleMetricsRepository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByFilesAsc(microservice, microserviceSet);
+        metrics = repoExampleMetricsRepository.findAllByMsAndMsSetOrderByFilesAsc(microservice, microserviceSet);
         double filesTotal = metrics.stream().map(RepoExampleMetrics::getFiles).reduce(0L, Long::sum);
         runSystemAggregationForWeightNormalization(metrics, FILES, filesTotal);
         runWeightRatioAggregation(metrics, FILES);
         runThresholdDerivation(metrics, FILES, microservice, microserviceSet);
 
-        metrics = repoExampleMetricsRepository.findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByAllContentsNumberAsc(microservice, microserviceSet);
+        metrics = repoExampleMetricsRepository.findAllByMsAndMsSetOrderByAllContentsNumberAsc(microservice, microserviceSet);
         double filesAllContents = metrics.stream().map(RepoExampleMetrics::getAllContentsNumber).reduce(0L, Long::sum);
         runSystemAggregationForWeightNormalization(metrics, ALL_CONTENTS, filesAllContents);
         runWeightRatioAggregation(metrics, ALL_CONTENTS);
@@ -61,12 +61,15 @@ public class MetricsDerivationService {
                 case SIZE:
                     double sizeWeight = metric.getSize() / sum;
                     metric.setSizeWeight(sizeWeight);
+                    break;
                 case FILES:
                     double filesWeight = metric.getFiles() / sum;
                     metric.setFilesWeight(filesWeight);
+                    break;
                 case ALL_CONTENTS:
                     double allContentsWeight = metric.getAllContentsNumber() / sum;
                     metric.setAllContentsNumberWeight(allContentsWeight);
+                    break;
             }
         }
         repoExampleMetricsRepository.saveAll(metrics);
@@ -79,12 +82,15 @@ public class MetricsDerivationService {
                 case SIZE:
                     aggregatedWeight += metric.getSizeWeight();
                     metric.setSizeAggregatedWeight(aggregatedWeight);
+                    break;
                 case FILES:
                     aggregatedWeight += metric.getFilesWeight();
                     metric.setFilesAggregatedWeight(aggregatedWeight);
+                    break;
                 case ALL_CONTENTS:
                     aggregatedWeight += metric.getAllContentsNumberWeight();
                     metric.setAllContentsAggregatedNumberWeight(aggregatedWeight);
+                    break;
             }
         }
         repoExampleMetricsRepository.saveAll(metrics);
@@ -97,15 +103,18 @@ public class MetricsDerivationService {
                 case SIZE:
                     if(isLowRiskClassification(metric.getSizeAggregatedWeight())){
                         threshold.setThresholdValue(metric.getSize());
-                }
+                    }
+                    break;
                 case FILES:
                     if(isLowRiskClassification(metric.getFilesAggregatedWeight())){
                         threshold.setThresholdValue(metric.getFiles());
                     }
+                    break;
                 case ALL_CONTENTS:
                     if(isLowRiskClassification(metric.getAllContentsAggregatedNumberWeight())){
                         threshold.setThresholdValue(metric.getAllContentsNumber());
                     }
+                break;
             }
         }
         thresholdService.update(threshold);
@@ -140,6 +149,26 @@ public class MetricsDerivationService {
             codeRepo.setScore(classificationDto.getScore());
             codeRepoService.save(codeRepo);
         }
+    }
+
+    private double calculateScore(CodeRepoMetrics codeRepoMetrics, boolean hasMsSetIndicator, StringBuilder report) {
+        double score = 0;
+        report.append("Missing: ");
+        score += getNumericalScore(codeRepoMetrics.getSize(), thresholdService.findByMetric(SIZE, hasMsSetIndicator).getThresholdValue(), report, SIZE);
+        score += getNumericalScore(codeRepoMetrics.getFiles(), thresholdService.findByMetric(FILES, hasMsSetIndicator).getThresholdValue(), report, FILES);
+        score += getNumericalScore(codeRepoMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS, hasMsSetIndicator).getThresholdValue(), report, ALL_CONTENTS);
+        score += getBooleanScore(codeRepoMetrics.isDockerfile(), report, DOCKERFILE);
+        score += getBooleanScore(codeRepoMetrics.isLogsService(), report, LOG_SERVICE);
+        score += getBooleanScore(codeRepoMetrics.isDatabaseConnection(), report, DATABASE);
+        score += getBooleanScore(codeRepoMetrics.isMessaging(), report, MESSAGING);
+        score += getBooleanScore(codeRepoMetrics.isRestful(), report, REST);
+        score += getBooleanScore(codeRepoMetrics.isMicroserviceMention(), report, MS_MENTION);
+        score += getBooleanScore(!codeRepoMetrics.isSoap(), report, SOAP);
+        if(MAX_CLASSIFICATION_SCORE == score){
+            report.setLength(0);
+            report.append("All metrics found!");
+        }
+        return score;
     }
 
     private ClassificationDto getCodeRepoClassification(double score, boolean hasMsSetIndicator, boolean hasMonolithIndicator) {
@@ -183,25 +212,7 @@ public class MetricsDerivationService {
         return false;
     }
 
-    private double calculateScore(CodeRepoMetrics codeRepoMetrics, boolean hasMsSetIndicator, StringBuilder report) {
-        double score = 0;
-        report.append("Missing: ");
-        score += getNumericalScore(codeRepoMetrics.getSize(), thresholdService.findByMetric(SIZE, hasMsSetIndicator).getThresholdValue(), report, SIZE);
-        score += getNumericalScore(codeRepoMetrics.getFiles(), thresholdService.findByMetric(FILES, hasMsSetIndicator).getThresholdValue(), report, FILES);
-        score += getNumericalScore(codeRepoMetrics.getAllContentsNumber(), thresholdService.findByMetric(ALL_CONTENTS, hasMsSetIndicator).getThresholdValue(), report, ALL_CONTENTS);
-        score += getBooleanScore(codeRepoMetrics.isDockerfile(), report, DOCKERFILE);
-        score += getBooleanScore(codeRepoMetrics.isLogsService(), report, LOG_SERVICE);
-        score += getBooleanScore(codeRepoMetrics.isDatabaseConnection(), report, DATABASE);
-        score += getBooleanScore(codeRepoMetrics.isMessaging(), report, MESSAGING);
-        score += getBooleanScore(codeRepoMetrics.isRestful(), report, REST);
-        score += getBooleanScore(codeRepoMetrics.isMicroserviceMention(), report, MS_MENTION);
-        score += getBooleanScore(!codeRepoMetrics.isSoap(), report, SOAP);
-        if(MAX_CLASSIFICATION_SCORE == score){
-            report.setLength(0);
-            report.append("All metrics found!");
-        }
-        return score;
-    }
+
 
     private double getBooleanScore(boolean metricValue, StringBuilder report, String metric) {
         if(metricValue){

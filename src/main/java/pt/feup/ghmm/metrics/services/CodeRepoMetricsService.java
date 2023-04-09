@@ -372,7 +372,7 @@ public class CodeRepoMetricsService {
     }
 
     private boolean hasMicroserviceMention(CodeRepo codeRepo) {
-        List<String> queryFragments = Arrays.asList("microservice", "micro-service");
+        List<String> queryFragments = Arrays.asList( );
         for(String queryFragment: queryFragments){
             if(codeRepo.getName().contains(queryFragment)) return true;
             SearchResultDto searchResultDto = gitHubApiService.searchRepository(codeRepo.getOwner(), codeRepo.getName(), queryFragment);

@@ -17,12 +17,21 @@ public interface RepoExampleMetricsRepository extends CrudRepository<RepoExample
 
     @Query(value = "SELECT m FROM RepoExampleMetrics m " +
             "WHERE m.repoExample.microservice =:microservice " +
-            "AND m.repoExample.microserviceSet =:microserviceSet ")
-    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderBySizeAsc(boolean microservice, boolean microserviceSet);
+            "AND m.repoExample.microserviceSet =:microserviceSet " +
+            " ORDER BY  m.size")
+    List<RepoExampleMetrics> findAllByMsAndMsSetOrderBySize(boolean microservice, boolean microserviceSet);
 
-    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByFilesAsc(boolean microservice, boolean microserviceSet);
+    @Query(value = "SELECT m FROM RepoExampleMetrics m " +
+            "WHERE m.repoExample.microservice =:microservice " +
+            "AND m.repoExample.microserviceSet =:microserviceSet " +
+            " ORDER BY  m.files")
+    List<RepoExampleMetrics> findAllByMsAndMsSetOrderByFilesAsc(boolean microservice, boolean microserviceSet);
 
-    List<RepoExampleMetrics> findAllByRepoExampleMicroserviceAndRepoExampleMicroserviceSetOrderByAllContentsNumberAsc(boolean microservice, boolean microserviceSet);
+    @Query(value = "SELECT m FROM RepoExampleMetrics m " +
+            "WHERE m.repoExample.microservice =:microservice " +
+            "AND m.repoExample.microserviceSet =:microserviceSet " +
+            " ORDER BY  m.allContentsNumber")
+    List<RepoExampleMetrics> findAllByMsAndMsSetOrderByAllContentsNumberAsc(boolean microservice, boolean microserviceSet);
 
     Page<RepoExampleMetrics> findByRepoExampleUrlContainingIgnoreCase(String keyword, Pageable paging);
 
