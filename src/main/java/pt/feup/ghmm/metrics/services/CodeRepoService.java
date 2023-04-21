@@ -199,9 +199,9 @@ public class CodeRepoService {
     public RepoResult save(ItemDto itemDto) {
         RepoMined repoMined = RepoMined
                 .builder()
-                .url(itemDto.getUrl())
+                .url(itemDto.getHtml_url())
                 .appName(itemDto.getName())
-                .owner(getOwnerFromUrl(itemDto.getUrl()))
+                .owner(getOwnerFromUrl(itemDto.getHtml_url()))
                 .name(itemDto.getName())
                 .minedDate(new Date())
                 .build();
