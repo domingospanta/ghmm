@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.groovy.parser.antlr4.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,31 +219,53 @@ public class CodeRepoService {
     }
 
     public BulkCodeRepoResultDto search(SearchRepoDto searchRepo) {
-        SearchResultDto searchResultDto = gitHubApiService.searchRepositories(searchRepo);
-        if(searchResultDto != null){
-            List<RepoResult> resultMap = new ArrayList<>();
-            int count = 0;
-            for(ItemDto itemDto: searchResultDto.getItems()){
-                RepoResult result = RepoResult
-                        .builder()
-                        .repo("test.com")
-                        .build();
-                //RepoResult result = save(itemDto);
-                resultMap.add(result);
-                if(!result.isError() && ++count >= searchRepo.getQuantity()){
-                   break;
+        if(isSearchInvalid(searchRepo)) return getInvalidSearchQueryResponse(searchRepo);
+        List<RepoResult> resultMap = new ArrayList<>();
+        int page = 0;
+        do{
+            SearchResultDto searchResultDto = gitHubApiService.searchRepositories(searchRepo, ++page);
+            if(searchResultDto != null && CollectionUtils.isNotEmpty(searchResultDto.getItems())){
+                for(ItemDto itemDto: searchResultDto.getItems()){
+                    RepoResult result = save(itemDto);
+                    if(!result.isError()){
+                        resultMap.add(result);
+                    }
+                    if(resultMap.size() >= searchRepo.getQuantity()){
+                        break;
+                    }
                 }
+            } else {
+                return BulkCodeRepoResultDto.builder()
+                        .error(true)
+                        .message(searchResultDto != null ? "Your search did not return any result due to: " + searchResultDto.getMessage() + ". Please try again." :
+                                "Invalid Search. Please try again.")
+                        .build();
             }
-            return BulkCodeRepoResultDto.builder()
-                    .resultMap(resultMap)
-                    .message("Found repos successfully!")
-                    .error(false)
-                    .build();
-        }
+        } while(resultMap.size() < searchRepo.getQuantity());
 
         return BulkCodeRepoResultDto.builder()
-                .error(true)
-                .message("Invalid Search! Try again.")
+                .resultMap(resultMap)
+                .message("Found repos successfully!")
+                .error(false)
                 .build();
+    }
+
+    private BulkCodeRepoResultDto getInvalidSearchQueryResponse(SearchRepoDto searchRepo) {
+        StringBuilder message = new StringBuilder();
+        if(searchRepo.getQuantity() == 0){
+            message.append("Quantity cannot be zero!\n");
+        }
+        if(StringUtils.isEmpty(searchRepo.getSearchString()) && StringUtils.isEmpty(searchRepo.getProgrammingLanguages())){
+            message.append("GH API does not allow an empty query parameter. Please type Search String or select at least one Programming Language.");
+        }
+        BulkCodeRepoResultDto repoResultDto = BulkCodeRepoResultDto.builder()
+                .message(message.toString())
+                .error(true)
+                .build();
+        return repoResultDto;
+    }
+
+    private boolean isSearchInvalid(SearchRepoDto searchRepo) {
+        return searchRepo.getQuantity() == 0 || (StringUtils.isEmpty(searchRepo.getSearchString()) && StringUtils.isEmpty(searchRepo.getProgrammingLanguages()));
     }
 }

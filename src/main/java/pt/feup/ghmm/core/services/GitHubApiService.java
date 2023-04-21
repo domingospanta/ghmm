@@ -97,14 +97,22 @@ public class GitHubApiService {
   }
 
   @Retryable(backoff = @Backoff(delay = 30000))
-  public SearchResultDto searchRepositories(SearchRepoDto searchRepoDto){
-    if(searchRepoDto.getQuantity() == 0) return null;
-    if(StringUtils.isNotEmpty(searchRepoDto.getProgrammingLanguages())){
-
+  public SearchResultDto searchRepositories(SearchRepoDto searchRepoDto, int page){
+    try {
+      StringBuilder url = new StringBuilder();
+      url.append(END_POINT).append("search/repositories?q=").append(searchRepoDto.getSearchString());
+      if(StringUtils.isNotEmpty(searchRepoDto.getProgrammingLanguages())){
+        url.append("+language:").append(searchRepoDto.getProgrammingLanguages());
+      }
+      url.append("&page=").append(page);
+      logRequest(url.toString());
+      return restTemplate.getForObject(url.toString(), SearchResultDto.class);
+    }catch (Exception e){
+      logger.error("searchRepositories: ", e);
+      return SearchResultDto.builder()
+              .message(e.getMessage())
+              .build();
     }
-    String url = END_POINT + "search/repositories?q=" + "language:JavaScript+language:Java";
-    logRequest(url);
-    return restTemplate.getForObject(url, SearchResultDto.class);
   }
 
   private void logRequest(String url) {
