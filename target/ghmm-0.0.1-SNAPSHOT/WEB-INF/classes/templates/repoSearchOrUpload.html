@@ -36,9 +36,9 @@
                     </div>
                 </div>
                 <div class="row mb-3">
-                    <label class="col-sm-2 col-form-label">Quantity</label>
+                    <label class="col-sm-2 col-form-label">*Quantity</label>
                     <div class="col-sm-10">
-                        <input class="form-control" th:field="*{quantity}">
+                        <input class="form-control" th:field="*{quantity}" th:required="required">
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -55,6 +55,13 @@
                         <button type="submit" class="btn btn-primary">Search</button>
                     </div>
                 </div>
+                <div class="row mb-3">
+                    <label class="col-sm-2 col-form-label">Search Rules:</label>
+                    <div class="col-sm-10">
+                        Quantity field must be greater than zero. <br>
+                        You must either type the Search String or select at least oen Programming Language.
+                    </div>
+                </div>
             </form><!-- End General Form Elements -->
             <div th:if="${bulkCodeRepoResult != null && processType == 'search'}">
                 <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${bulkCodeRepoResult.error} == true">
@@ -68,7 +75,7 @@
 
                     <!-- Modal Dialog Scrollable -->
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalDialogScrollable">
-                        Upload Details
+                        Search Details
                     </button>
                 </div>
         </div>
