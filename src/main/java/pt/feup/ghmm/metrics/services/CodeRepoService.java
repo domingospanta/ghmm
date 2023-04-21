@@ -167,6 +167,7 @@ public class CodeRepoService {
                     .owner(codeRepoDto.getOwner())
                     .name(getRepositoryNameFromUrl(codeRepoDto.getUrl()))
                     .microservice(codeRepoDto.isMicroservice())
+                    .createdDate(new Date())
                     .build();
             return save(repoExample);
     }
@@ -202,6 +203,7 @@ public class CodeRepoService {
                 .appName(itemDto.getName())
                 .owner(getOwnerFromUrl(itemDto.getUrl()))
                 .name(itemDto.getName())
+                .minedDate(new Date())
                 .build();
         return save(repoMined);
     }
