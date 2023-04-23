@@ -1,0 +1,72 @@
+﻿ID  ,URL  ,SCORE  ,CLASSIFICATION  ,MESSAGE  
+204,https://github.com/oktadev/spring-boot-microservices-example,7.0,MONOLITH,Missing:  dockerfile log_service messaging
+205,https://github.com/fernandoabcampos/spring-netflix-oss-microservices,9.0,MICROSERVICE,Missing:  log_service
+209,https://github.com/benwilcock/cqrs-microservice-sampler,9.0,MICROSERVICE,Missing:  log_service
+210,https://github.com/kbastani/cloud-native-microservice-strangler-example,7.0,MONOLITH,Missing:  log_service not_soap
+212,https://github.com/matt-slater/delivery-system,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+213,https://github.com/digota/digota,8.0,MICROSERVICE,Missing:  log_service messaging
+214,https://github.com/venkataravuri/e-commerce-microservices-sample,8.0,MICROSERVICE,Missing:  log_service messaging
+217,https://github.com/gfawcett22/EnterprisePlanner,8.0,MICROSERVICE,Missing:  log_service not_soap
+221,https://github.com/xJREB/research-modifiability-pattern-experiment,7.0,MONOLITH,Missing:  dockerfile log_service ms_mention
+222,https://github.com/kbastani/spring-boot-graph-processing-example,8.0,MICROSERVICE_SET,Missing:  log_service
+223,https://github.com/GoogleCloudPlatform/microservices-demo,8.0,MICROSERVICE,Missing:  log_service messaging
+225,https://github.com/TheDigitalNinja/million-song-library,8.0,MICROSERVICE,Missing:  log_service messaging
+226,https://github.com/Microservice-API-Patterns/LakesideMutual,8.0,MICROSERVICE_SET,Missing:  log_service
+228,https://github.com/senecajs/ramanujan,7.0,MONOLITH,Missing:  log_service database messaging
+229,https://github.com/bishion/microService,7.0,MONOLITH,Missing:  dockerfile log_service database
+231,https://github.com/ewolff/microservice-kubernetes,7.0,MONOLITH,Missing:  log_service database
+232,https://github.com/mspnp/microservices-reference-implementation,8.0,MICROSERVICE,Missing:  log_service messaging
+234,https://github.com/mdeket/spring-cloud-movie-recommendation,7.0,MONOLITH,Missing:  dockerfile log_service messaging
+235,https://github.com/aspnet/MusicStore,5.0,MONOLITH,Missing:  dockerfile log_service database messaging ms_mention
+237,https://github.com/yidongnan/spring-cloud-netflix-example,7.0,MONOLITH,Missing:  log_service database ms_mention
+238,https://github.com/microsoft/PartsUnlimitedMRPmicro,9.0,MICROSERVICE,Missing:  messaging
+239,https://github.com/nginxinc/mra-ingenious,8.0,MICROSERVICE,Missing:  log_service messaging
+240,https://github.com/sqshq/PiggyMetrics,10.0,MICROSERVICE_SET,All metrics found!
+244,https://github.com/antonio94js/servicecommerce,10.0,MICROSERVICE,All metrics found!
+245,https://github.com/JoeCao/qbike,10.0,MICROSERVICE,All metrics found!
+246,https://github.com/sitewhere/sitewhere,9.0,MICROSERVICE,Missing:  log_service
+248,https://github.com/zpng/spring-cloud-microservice-examples,8.0,MICROSERVICE_SET,Missing:  log_service
+249,https://github.com/paulc4/microservices-demo,7.0,MONOLITH,Missing:  log_service messaging
+251,https://github.com/aws-samples/amazon-ecs-java-microservices,8.0,MICROSERVICE,Missing:  log_service messaging
+254,https://github.com/jferrater/Tap-And-Eat-MicroServices,8.0,MICROSERVICE,Missing:  log_service messaging
+255,https://github.com/yun19830206/CloudShop-MicroService-Architecture,7.0,MONOLITH,Missing:  dockerfile log_service messaging
+257,https://github.com/FudanSELab/train-ticket,10.0,MICROSERVICE_SET,All metrics found!
+258,https://github.com/Vanilla-Java/Microservices,5.0,MONOLITH,Missing:  dockerfile log_service database messaging ms_mention
+259,https://github.com/mohamed-abdo/vehicle-tracking-microservices,8.0,MICROSERVICE,Missing:  log_service not_soap
+260,https://github.com/HieJulia/warehouse-microservice,8.0,MICROSERVICE_SET,Missing:  log_service
+302,https://github.com/lazarocosta/lazarocosta.github.io,5.0,MONOLITH,Missing:  dockerfile log_service database messaging ms_mention
+303,https://github.com/winily/universal-webview,5.0,MONOLITH,Missing:  dockerfile log_service database messaging ms_mention
+304,https://github.com/dotnet-architecture/eShopOnWeb,6.0,MONOLITH,Missing:  log_service messaging ms_mention not_soap
+305,https://github.com/kgrzybek/modular-monolith-with-ddd,8.0,MICROSERVICE,Missing:  log_service not_soap
+306,https://github.com/anton-liauchuk/educational-platform,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+307,https://github.com/mgce/modular-monolith-nodejs,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+308,https://github.com/tmkontra/fastapi-fullstack-boilerplate,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+309,https://github.com/OFFLINE-GmbH/go-webapp-example,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+310,https://github.com/duckietown/duckiedrone,6.0,MONOLITH,Missing:  log_service database messaging ms_mention
+311,https://github.com/kennymeneses/SophianEcommerce,6.0,MONOLITH,Missing:  log_service messaging ms_mention not_soap
+314,https://github.com/DijitalDonusumAkademi/ETrade,5.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention not_soap
+315,https://github.com/MuriloFurlan80/ArchitectureMonolitic,4.0,MONOLITH,Missing:  dockerfile log_service database messaging ms_mention not_soap
+316,https://github.com/j3antov4r/1_ECS_Java_Spring_PetClinic,8.0,MICROSERVICE,Missing:  log_service messaging
+317,https://github.com/mattmakai/fullstackpython.com,9.0,MICROSERVICE_SET,All metrics found!
+318,https://github.com/cookiecutter/cookiecutter-django,7.0,MONOLITH,Missing:  log_service ms_mention
+319,https://github.com/graphql-python/graphene-django,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+320,https://github.com/wsvincent/djangox,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+321,https://github.com/jpadilla/django-project-template,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+322,https://github.com/bradtraversy/btre_project,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+323,https://github.com/twoscoops/django-twoscoops-project,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+324,https://github.com/dyve/django-bootstrap-toolkit,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+325,https://github.com/makinacorpus/django-leaflet,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+326,https://github.com/poncoe/cattobuyz-v1,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+327,https://github.com/TomasMaggi/finance.py,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+328,https://github.com/JagerCox/basic-project-django2-channels2-gunicorn-dahpne,7.0,MONOLITH,Missing:  dockerfile log_service ms_mention
+329,https://github.com/Franjrsierra18/Restaurants-Symfony,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+330,https://github.com/williamrolando88/Recipe-app,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+332,https://github.com/OscarPay/TaskManager,7.0,MONOLITH,Missing:  log_service ms_mention
+333,https://github.com/symfony/demo,8.0,MICROSERVICE,Missing:  messaging ms_mention
+334,https://github.com/symfony/symfony-standard,6.0,MONOLITH,Missing:  dockerfile log_service messaging ms_mention
+335,https://github.com/knpuniversity/symfony4,7.0,MONOLITH,Missing:  log_service ms_mention
+336,https://github.com/LLK/scratch-gui,6.0,MONOLITH,Missing:  size log_service database ms_mention
+337,https://github.com/django-ckeditor/django-ckeditor,7.0,MONOLITH,Missing:  log_service messaging ms_mention
+,,,,
+,,,,
+,,,,
