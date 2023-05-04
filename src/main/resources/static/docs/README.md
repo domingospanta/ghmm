@@ -30,5 +30,3 @@ Additionally, the embedded H2 database can be accessed at [/h2-console](http://l
 JDBC URL: jdbc:h2:file:./data/ghmmdb \
 User Name: sa \
 Password: ghmmd@$$
-
-Here you can see what it should look like: [Views of the system](views.md)

@@ -6,7 +6,7 @@ You can find out more about this study here:
 
 ## Architecture & Technologies
 The tool was built following a monolithic architecture using the Model-View-Controller design pattern for simplicity.
-The programming language of choice was [Java 17](https://www.jcp.org/en/jsr/detail?id=392) and the framework used was [Spring Boot](https://start.spring.io/) for the Models and Controllers, whereas [Thymeleaf](https://www.thymeleaf.org/) as the template engine for the views.
+The programming language of choice was <a href="https://www.jcp.org/en/jsr/detail?id=392" target="_blank">Java 17</a> and the framework used was <a href="https://start.spring.io/" target="_blank">Spring Boot</a> for the Models and Controllers, whereas <a href="https://www.thymeleaf.org" target="_blank">Thymeleaf</a> as the template engine for the views.
 Below the system architecture with its main nodes and components: ![Deployment Diagram](../images/docsImages/deploymentDiagram.png)
 
 
@@ -31,4 +31,4 @@ JDBC URL: jdbc:h2:file:./data/ghmmdb \
 User Name: sa \
 Password: ghmmd@$$
 
-Here you can see what it should look like: [Views of the system](views.md)
+Here you can see what it should look like: <a href="https://github.com/domingospanta/ghmm/blob/main/src/main/resources/static/docs/views.md" target="_blank">Views of the system</a>

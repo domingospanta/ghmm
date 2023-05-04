@@ -1,2 +1,1 @@
 # Views of the application
-
