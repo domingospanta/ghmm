@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html layout:decorate="~{page}" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
+    <script type="module" src="https://cdn.jsdelivr.net/gh/zerodevx/zero-md@2/dist/zero-md.min.js"></script>
     <title>Listing</title>
 </head>
 <body>
 
 <div layout:fragment="content">
-    <p class="text-center p-5">
-        The content of this page will appear here.
-    </p>
+    <zero-md th:src="@{docs/README.md}"></zero-md>
 </div>
 </body>
 </html>
