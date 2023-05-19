@@ -230,14 +230,16 @@ public class CodeRepoService {
         if(isSearchInvalid(searchRepo)) return CompletableFuture.completedFuture(getInvalidSearchQueryResponse(searchRepo));
         List<RepoResult> resultMap = new ArrayList<>();
         int page = 0;
-        boolean result;
-        SearchResultDto searchResultDto;
-        do{
+        boolean result = true;
+        SearchResultDto searchResultDto = null;
+        while(result && page < 10){
             searchResultDto = gitHubApiService.searchRepositories(searchRepo.getSearchString(), searchRepo.getProgrammingLanguages(), ++page);
             result = addResultToMap(searchResultDto, resultMap, searchRepo.getQuantity());
-        } while(result && resultMap.size() < searchRepo.getQuantity());
+            if(searchRepo.getQuantity() < resultMap.size()) break;
+        }
 
-        String message = result ? "Found repos successfully!" : (searchResultDto != null ? "Your search did not return any result due to: " + searchResultDto.getMessage() + ". Please try again." :
+        String message = result ? resultMap.size() + " uniques (" + searchRepo.getProgrammingLanguages() + ")  repositories saved successfully!" :
+                (searchResultDto != null ? "Your search did not return any result due to: " + searchResultDto.getMessage() + ". Please try again." :
                 "Invalid Search. Please try again.");
         return CompletableFuture.completedFuture(BulkCodeRepoResultDto.builder()
                 .resultMap(resultMap)

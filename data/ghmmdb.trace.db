@@ -7159,3 +7159,17 @@ Caused by: org.h2.jdbc.JdbcSQLNonTransientConnectionException: The connection wa
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:678)
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:477)
 	... 17 more
+2023-05-19 18:03:33 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM CODE_REPO \000d\000a[*]10where message = null"; SQL statement:
+SELECT * FROM CODE_REPO 
+10where message = null [42000-214]
+2023-05-19 18:07:59 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]deleteFROM CODE_REPO \000d\000aWHERE DTYPE = 'RepoMined'\000d\000aAND classification IS NULL"; expected "DELETE, DROP, DECLARE, DEALLOCATE"; SQL statement:
+deleteFROM CODE_REPO 
+WHERE DTYPE = 'RepoMined'
+AND classification IS NULL [42001-214]
+2023-05-19 19:35:36 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM CODE_REPO \000d\000a[*]10where dtype = 'RepoMined'\000d\000a10and MINED_DATE > '2023-05-15 19:54:07.495'"; SQL statement:
+SELECT * FROM CODE_REPO 
+10where dtype = 'RepoMined'
+10and MINED_DATE > '2023-05-15 19:54:07.495' [42000-214]
