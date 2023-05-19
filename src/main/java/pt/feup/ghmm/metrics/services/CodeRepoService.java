@@ -2,8 +2,10 @@ package pt.feup.ghmm.metrics.services;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +48,8 @@ public class CodeRepoService {
    private RepoMinedRepository repoMinedRepository;
 
    private GitHubApiService gitHubApiService;
+
+    private LanguageService languageService;
 
     public List<RepoResult> save(MultipartFile file, boolean examples) {
         try {
@@ -220,36 +225,42 @@ public class CodeRepoService {
         return codeRepo;
     }
 
-    public BulkCodeRepoResultDto search(SearchRepoDto searchRepo) {
-        if(isSearchInvalid(searchRepo)) return getInvalidSearchQueryResponse(searchRepo);
+    @Async
+    public CompletableFuture<BulkCodeRepoResultDto> search(SearchRepoDto searchRepo) {
+        if(isSearchInvalid(searchRepo)) return CompletableFuture.completedFuture(getInvalidSearchQueryResponse(searchRepo));
         List<RepoResult> resultMap = new ArrayList<>();
         int page = 0;
+        boolean result;
+        SearchResultDto searchResultDto;
         do{
-            SearchResultDto searchResultDto = gitHubApiService.searchRepositories(searchRepo, ++page);
-            if(searchResultDto != null && CollectionUtils.isNotEmpty(searchResultDto.getItems())){
-                for(ItemDto itemDto: searchResultDto.getItems()){
-                    RepoResult result = save(itemDto);
-                    if(!result.isError()){
-                        resultMap.add(result);
-                    }
-                    if(resultMap.size() >= searchRepo.getQuantity()){
-                        break;
-                    }
-                }
-            } else {
-                return BulkCodeRepoResultDto.builder()
-                        .error(true)
-                        .message(searchResultDto != null ? "Your search did not return any result due to: " + searchResultDto.getMessage() + ". Please try again." :
-                                "Invalid Search. Please try again.")
-                        .build();
-            }
-        } while(resultMap.size() < searchRepo.getQuantity());
+            searchResultDto = gitHubApiService.searchRepositories(searchRepo.getSearchString(), searchRepo.getProgrammingLanguages(), ++page);
+            result = addResultToMap(searchResultDto, resultMap, searchRepo.getQuantity());
+        } while(result && resultMap.size() < searchRepo.getQuantity());
 
-        return BulkCodeRepoResultDto.builder()
+        String message = result ? "Found repos successfully!" : (searchResultDto != null ? "Your search did not return any result due to: " + searchResultDto.getMessage() + ". Please try again." :
+                "Invalid Search. Please try again.");
+        return CompletableFuture.completedFuture(BulkCodeRepoResultDto.builder()
                 .resultMap(resultMap)
-                .message("Found repos successfully!")
-                .error(false)
-                .build();
+                .message(message)
+                .error(!result)
+                .build());
+    }
+
+    private boolean addResultToMap(SearchResultDto searchResultDto, List<RepoResult> resultMap, int quantity) {
+        if(searchResultDto != null && CollectionUtils.isNotEmpty(searchResultDto.getItems())){
+            for(ItemDto itemDto: searchResultDto.getItems()){
+                RepoResult result = save(itemDto);
+                if(!result.isError()){
+                    resultMap.add(result);
+                }
+                if(resultMap.size() >= quantity){
+                    break;
+                }
+            }
+        } else {
+            return false;
+        }
+        return true;
     }
 
     private BulkCodeRepoResultDto getInvalidSearchQueryResponse(SearchRepoDto searchRepo) {

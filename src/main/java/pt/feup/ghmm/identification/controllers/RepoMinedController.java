@@ -17,9 +17,9 @@ import pt.feup.ghmm.metrics.models.RepoMined;
 import pt.feup.ghmm.metrics.services.CodeRepoService;
 import pt.feup.ghmm.metrics.services.LanguageService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @AllArgsConstructor
 @Controller
@@ -107,8 +107,9 @@ public class RepoMinedController {
     }
 
     @PostMapping("/search")
-    public String searchMinedRepo(@ModelAttribute SearchRepoDto searchRepo, Model model) {
-        BulkCodeRepoResultDto repoResult = codeRepoService.search(searchRepo);
+    public String searchMinedRepo(@ModelAttribute SearchRepoDto searchRepo, Model model) throws ExecutionException, InterruptedException {
+        CompletableFuture<BulkCodeRepoResultDto> completableFuture = codeRepoService.search(searchRepo);
+        BulkCodeRepoResultDto repoResult = completableFuture.get();
         model.addAttribute("bulkCodeRepoResult", repoResult);
         model.addAttribute("processType", "search");
         model.addAttribute("programmingLanguages", languageService.getProgrammingLanguages());

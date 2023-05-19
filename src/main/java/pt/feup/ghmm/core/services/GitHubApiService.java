@@ -17,6 +17,7 @@ import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class GitHubApiService {
@@ -97,14 +98,16 @@ public class GitHubApiService {
   }
 
   @Retryable(backoff = @Backoff(delay = 30000))
-  public SearchResultDto searchRepositories(SearchRepoDto searchRepoDto, int page){
+  public SearchResultDto searchRepositories(String searchString, String language, int page){
     try {
+      TimeUnit.SECONDS.sleep(5);
       StringBuilder url = new StringBuilder();
-      url.append(END_POINT).append("search/repositories?q=").append(searchRepoDto.getSearchString());
-      if(StringUtils.isNotEmpty(searchRepoDto.getProgrammingLanguages())){
-        url.append("+language:").append(searchRepoDto.getProgrammingLanguages());
+      url.append(END_POINT).append("search/repositories?q=").append(searchString);
+      if(StringUtils.isNotEmpty(language)){
+        url.append("+language:").append(language);
       }
       url.append("&page=").append(page);
+      url.append("&per_page=100");
       logRequest(url.toString());
       return restTemplate.getForObject(url.toString(), SearchResultDto.class);
     }catch (Exception e){
