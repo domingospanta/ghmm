@@ -38,7 +38,7 @@
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">*Quantity</label>
                     <div class="col-sm-10">
-                        <input class="form-control" th:field="*{quantity}" th:required="required">
+                        <input class="form-control" th:field="*{quantity}" th:required="required" min="1" max="1000">
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -58,7 +58,7 @@
                 <div class="row mb-3">
                     <label class="col-sm-2 col-form-label">Search Rules:</label>
                     <div class="col-sm-10">
-                        Quantity field must be greater than zero. <br>
+                        Quantity field must be greater than zero and equals or smaller than 1000 (due to GitHub API Limitation). <br>
                         You must either type the Search String or select at least one Programming Language.
                     </div>
                 </div>
