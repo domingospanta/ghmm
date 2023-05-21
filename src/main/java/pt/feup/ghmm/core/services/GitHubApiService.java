@@ -77,10 +77,20 @@ public class GitHubApiService {
 
   @Retryable(backoff = @Backoff(delay = 30000))
   public SearchResultDto searchRepository(String owner, String repository, String queryFragment){
-    if(StringUtils.isEmpty(owner) || StringUtils.isEmpty(repository) || StringUtils.isEmpty(queryFragment)) return null;
-    String url = END_POINT + "search/code?q="+ queryFragment + "+repo:"+ owner + "/" + repository;
-    logRequest(url);
-    return restTemplate.getForObject(url, SearchResultDto.class);
+    try {
+      // GitHub API rate limit for code search is 10 requests per minute so each request can only be made after X seconds to not exceed that limit.
+      // Ref: https://docs.github.com/en/rest/search?apiVersion=2022-11-28#rate-limit
+      TimeUnit.SECONDS.sleep(6);
+      if(StringUtils.isEmpty(owner) || StringUtils.isEmpty(repository) || StringUtils.isEmpty(queryFragment)) return null;
+      String url = END_POINT + "search/code?q="+ queryFragment + "+repo:"+ owner + "/" + repository;
+      logRequest(url);
+      return restTemplate.getForObject(url, SearchResultDto.class);
+    } catch (InterruptedException e) {
+      logger.error("search/code error: ", e);
+      return SearchResultDto.builder()
+              .message(e.getMessage())
+              .build();
+    }
   }
 
   @Retryable(backoff = @Backoff(delay = 30000))
