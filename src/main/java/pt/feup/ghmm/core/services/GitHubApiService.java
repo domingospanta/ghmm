@@ -31,6 +31,8 @@ public class GitHubApiService {
   @Value("${github.api.url}")
   private String END_POINT;
 
+  private String user;
+
   public GitHubApiService(@Value("${github.api.user}") String user,
                           @Value("${github.api.password}") String password,
                           @Value("${github.api.url}") String url,
@@ -38,6 +40,7 @@ public class GitHubApiService {
     this.restTemplate = restTemplateBuilder.basicAuthentication(user, password).build();
     END_POINT = url;
     requestCount = 0;
+    this.user = user;
   }
 
   @Retryable(backoff = @Backoff(delay = 30000))
@@ -120,6 +123,6 @@ public class GitHubApiService {
 
   private void logRequest(String url) {
     requestCount++;
-    logger.info("Making request: " + url + "\n Request count:" + requestCount);
+    logger.info("Making request: " + url + "\n Request count:" + requestCount + "\n User: " + user);
   }
 }
