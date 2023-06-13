@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import pt.feup.ghmm.core.dtos.*;
 import pt.feup.ghmm.core.utils.YAMLHelper;
-import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
 
 import java.util.HashMap;
 import java.util.List;

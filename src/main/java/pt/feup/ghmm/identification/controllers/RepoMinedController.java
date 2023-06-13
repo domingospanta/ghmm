@@ -30,54 +30,11 @@ public class RepoMinedController {
 
     private LanguageService languageService;
 
-    private final String LIST_PAGE = "repoMinedList";
     private final String UPLOAD_PAGE = "repoSearchOrUpload";
-
-    @GetMapping("/all")
-    public String getAll(Model model,
-                         @RequestParam(required = false) String keyword,
-                         @RequestParam(defaultValue = "1") int page,
-                         @RequestParam(defaultValue = "10") int size) {
-        try {
-            List<RepoMined> minedList;
-            Pageable paging = PageRequest.of(page - 1, size);
-
-            Page<RepoMined> pageTuts;
-            if (keyword == null) {
-                pageTuts = codeRepoService.findAllMined(paging);
-            } else {
-                pageTuts = codeRepoService.findMinedReposByUrlContainingIgnoreCase(keyword, paging);
-                model.addAttribute("keyword", keyword);
-            }
-
-            minedList = pageTuts.getContent();
-
-            model.addAttribute("minedRepos", minedList);
-            model.addAttribute("currentPage", pageTuts.getNumber() + 1);
-            model.addAttribute("totalItems", pageTuts.getTotalElements());
-            model.addAttribute("totalPages", pageTuts.getTotalPages());
-            model.addAttribute("pageSize", size);
-        } catch (Exception e) {
-            model.addAttribute("message", e.getMessage());
-        }
-
-        return LIST_PAGE;
-    }
 
     @GetMapping("/upload")
     public String getMinedRepoPage(Model model){
         return prepareDataForUploadPage(model);
-    }
-
-    @GetMapping("/delete/{id}")
-    public String deleteMinedRepo(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-        RepoMined repoMined = codeRepoService.findRepoMinedById(id);
-        if(repoMined != null){
-            RepoResult repoResult = codeRepoService.delete(repoMined);
-            redirectAttributes.addFlashAttribute("result", repoResult);
-        }
-
-        return "redirect:/repo/mined/all";
     }
 
     @PostMapping("/upload")

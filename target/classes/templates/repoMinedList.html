@@ -18,12 +18,12 @@
 
     <div class="card">
         <div class="card-body table-responsive">
-            <div th:replace="~{fragments/searchBar :: searchBar('/repo/mined/all')}"> </div>
+            <div th:replace="~{fragments/searchBar :: searchBar('/repo/corpus')}"> </div>
             <div class="container">
                 <label>[[${totalItems}]] result(s)</label>
 
                 <div th:if="${result != null}">
-                    <div th:replace="~{fragments/bulkCodeRepoResult :: uploadResult(result=${result})}"> </div>
+                    <div th:replace="~{fragments/bulkCodeRepoResult :: bulkCodeRepoResult(result=${result})}"> </div>
                 </div>
             </div>
             <!-- Table with stripped rows -->
@@ -45,7 +45,7 @@
 
                 <tr th:each="repo : ${minedRepos}">
                     <td>
-                        <a th:href="@{'/repo/mined/delete/' + ${repo.id}}" id="btnDelete"
+                        <a th:href="@{'/repo/corpus/delete/' + ${repo.id}}" id="btnDelete"
                            title="Delete this tutorial" class="fa-regular fa-trash-can icon-dark btn-delete">
                             <i class="bi bi-archive-fill"></i>
                         </a>
@@ -72,26 +72,26 @@
             <nav aria-label="Pagination" th:if="${totalPages > 0}">
                 <ul class="pagination justify-content-center">
                     <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/mine/all', 1, '<<', 'First Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/repo/corpus', 1, '<<', 'First Page')"></a>
                     </li>
                     <li class="page-item font-weight-bold" th:classappend="${currentPage == 1} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${currentPage - 1}, 'Prev', 'Previous Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/repo/corpus', ${currentPage - 1}, 'Prev', 'Previous Page')"></a>
                     </li>
                     <li class="page-item disabled" th:if="${currentPage - 2 > 1}">
                         <a class="page-link" href="#">...</a>
                     </li>
                     <li class="page-item" th:classappend="${page == currentPage} ? 'active'"
                         th:each="page : ${#numbers.sequence(currentPage > 2 ? currentPage - 2 : 1, currentPage + 2 < totalPages ? currentPage + 2 : totalPages)}">
-                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${page}, ${page}, 'Page ' + ${page})"></a>
+                        <a th:replace="fragments/paging :: paging('/repo/corpus', ${page}, ${page}, 'Page ' + ${page})"></a>
                     </li>
                     <li class="page-item disabled" th:if="${currentPage + 2 < totalPages}">
                         <a class="page-link" href="#">...</a>
                     </li>
                     <li class="page-item font-weight-bold" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${currentPage + 1},'Next', 'Next Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/repo/corpus', ${currentPage + 1},'Next', 'Next Page')"></a>
                     </li>
                     <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                        <a th:replace="fragments/paging :: paging('/repo/mined/all', ${totalPages}, '>>', 'Last Page')"></a>
+                        <a th:replace="fragments/paging :: paging('/repo/corpus', ${totalPages}, '>>', 'Last Page')"></a>
                     </li>
                 </ul>
             </nav>

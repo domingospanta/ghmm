@@ -49,8 +49,6 @@ public class CodeRepoService {
 
    private GitHubApiService gitHubApiService;
 
-    private LanguageService languageService;
-
     public List<RepoResult> save(MultipartFile file, boolean examples) {
         try {
             List<CodeRepo> codeRepos = CSVHelper.csvToCodeRepos(file.getInputStream(), examples);
