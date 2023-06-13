@@ -7,19 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import pt.feup.ghmm.core.utils.CSVHelper;
-import pt.feup.ghmm.metrics.dtos.BulkCodeRepoResultDto;
 import pt.feup.ghmm.metrics.dtos.RepoResult;
-import pt.feup.ghmm.metrics.dtos.SearchRepoDto;
-import pt.feup.ghmm.metrics.models.RepoMined;
-import pt.feup.ghmm.metrics.services.CodeRepoService;
-import pt.feup.ghmm.metrics.services.LanguageService;
+import pt.feup.ghmm.repo.models.RepoMined;
+import pt.feup.ghmm.repo.services.CodeRepoService;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 @AllArgsConstructor
 @Controller

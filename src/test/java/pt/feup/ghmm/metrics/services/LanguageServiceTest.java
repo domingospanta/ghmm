@@ -8,8 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import pt.feup.ghmm.metrics.models.Language;
-import pt.feup.ghmm.metrics.repositories.LanguageRepository;
+import pt.feup.ghmm.identification.models.Language;
+import pt.feup.ghmm.identification.repositories.LanguageRepository;
+import pt.feup.ghmm.identification.services.LanguageService;
 
 import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureWebClient

@@ -6,17 +6,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import pt.feup.ghmm.identification.models.ProcessExecution;
 import pt.feup.ghmm.metrics.dtos.MetricsStatisticsDto;
 import pt.feup.ghmm.metrics.dtos.ProcessExecutionDto;
 import pt.feup.ghmm.metrics.models.CodeRepoMetrics;
-import pt.feup.ghmm.metrics.models.ProcessExecution;
 import pt.feup.ghmm.metrics.services.CodeRepoMetricsService;
-import pt.feup.ghmm.metrics.services.CodeRepoService;
+import pt.feup.ghmm.repo.services.CodeRepoService;
 
 import java.util.List;
 
-import static pt.feup.ghmm.core.utils.Constants.EXAMPLE_PROCESS_TYPE;
-import static pt.feup.ghmm.core.utils.Constants.MINED_PROCESS_TYPE;
+import static pt.feup.ghmm.integration.utils.Constants.EXAMPLE_PROCESS_TYPE;
+import static pt.feup.ghmm.integration.utils.Constants.MINED_PROCESS_TYPE;
 
 @Controller
 @RequestMapping("/metrics")
