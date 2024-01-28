@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import pt.feup.ghmm.core.response.ResponseMessage;
+import pt.feup.ghmm.integration.response.ResponseMessage;
 
 @AllArgsConstructor
 @NoArgsConstructor

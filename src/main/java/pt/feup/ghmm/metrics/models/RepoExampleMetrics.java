@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import pt.feup.ghmm.repo.models.RepoExample;
 
 @AllArgsConstructor
 @NoArgsConstructor

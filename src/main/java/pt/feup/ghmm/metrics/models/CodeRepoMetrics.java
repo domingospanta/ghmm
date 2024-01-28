@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import pt.feup.ghmm.identification.models.Language;
+import pt.feup.ghmm.identification.models.Service;
 
 import java.util.Set;
 
